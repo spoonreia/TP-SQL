@@ -1,1 +1,1 @@
-select * from hola;
+select * from hola where hola = 0;
