@@ -1,9 +1,9 @@
 Items pendientes:
 
 - [ ] Creado de tablas:
-	- [ ] Registro (Logs)
+	- [X] Registro (Logs)
 	- [X] TipoCambio
-	- [ ] Turno
+	- [X] Turno
 	- [ ] Empleado
 	- [ ] Sucursal
 	- [ ] Cliente
