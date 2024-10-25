@@ -1,1 +1,0 @@
-select * from hola where hola = 0;
