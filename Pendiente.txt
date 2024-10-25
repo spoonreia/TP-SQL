@@ -1,0 +1,27 @@
+Items pendientes:
+
+- [ ] Creado de tablas:
+	- [ ] Registro (Logs)
+	- [X] TipoCambio
+	- [ ] Turno
+	- [ ] Empleado
+	- [ ] Sucursal
+	- [ ] Cliente
+	- [ ] MedioPago
+	- [ ] Catalogo
+	- [ ] Venta
+	- [ ] Producto
+	- [ ] VentaDetalle
+	- [ ] SucursalProducto
+	
+- [ ] Stores Procedures:
+	- [ ] InsertarLog
+	- [ ] ModificarDatos
+	- [ ] InsertarDatos
+	- [ ] EliminarDatos
+	- [ ] EliminarCliente (Borrado logico con campo Activo)
+	- [ ] EliminarSucursal (Borrado logico con campo Activo)
+	- [ ] EliminarEmpleado (Borrado logico con campo Activo)
+	- [ ] EliminarProducto (Borrado logico con campo Activo)
+	- [ ] EliminarCatalogo (Borrado logico con campo Activo)
+	- [ ] EliminarMedioPago (Borrado logico con campo Activo)
