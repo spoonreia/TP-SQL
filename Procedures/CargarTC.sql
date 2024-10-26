@@ -46,7 +46,7 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			PRINT('Error en la Modificación.');
+			PRINT('Error en la Insercion.');
 		END
 
     END

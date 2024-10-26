@@ -1,0 +1,20 @@
+2024-10-26 13:28:41: Iniciando proceso de conversión
+2024-10-26 13:28:41: Iniciando Excel
+2024-10-26 13:28:42: Abriendo archivo Excel
+2024-10-26 13:28:42: Verificando hoja 'sucursal'
+2024-10-26 13:28:42: Guardando como CSV
+2024-10-26 13:28:42: Conversión completada exitosamente
+2024-10-26 13:28:42: Limpiando recursos...
+2024-10-26 13:28:42: Proceso finalizado
+2024-10-26 13:28:42: Archivo CSV creado correctamente. Tamaño: 4140 bytes
+2024-10-26 13:28:42: Número de líneas en el CSV: 149
+2024-10-26 13:30:13: Iniciando proceso de conversión
+2024-10-26 13:30:13: Iniciando Excel
+2024-10-26 13:30:14: Abriendo archivo Excel
+2024-10-26 13:30:14: Verificando hoja 'sucursal'
+2024-10-26 13:30:14: Guardando como CSV
+2024-10-26 13:30:14: Conversión completada exitosamente
+2024-10-26 13:30:14: Limpiando recursos...
+2024-10-26 13:30:14: Proceso finalizado
+2024-10-26 13:30:14: Archivo CSV creado correctamente. Tamaño: 4140 bytes
+2024-10-26 13:30:14: Número de líneas en el CSV: 149

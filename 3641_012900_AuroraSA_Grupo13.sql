@@ -134,15 +134,15 @@ GO
 
 CREATE TABLE dbAuroraSA.Sucursal(
 	idSucursal	INT IDENTITY(1,1),
-	ciudad		VARCHAR (50) NOT NULL,
-	direccion	VARCHAR (50) NOT NULL,
+	ciudad		VARCHAR (50) UNIQUE NOT NULL,
+	direccion	VARCHAR (150) NOT NULL,
 	telefono	INT,
 	activo		BIT DEFAULT 1,
 
 	CONSTRAINT PK_idSucursal PRIMARY KEY (idSucursal),
 
 	CONSTRAINT CK_Telefono_Longitud CHECK (
-		telefono BETWEEN 1000000000 AND 9999999999 -- Chequea que sean 10 numeros de telefono
+		telefono BETWEEN 10000000 AND 99999999 -- Chequea que sean 8 numeros de telefono
 	),
 
 	CONSTRAINT CK_ciudad CHECK(
@@ -496,7 +496,7 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			PRINT('Error en la Modificación.');
+			PRINT('Error en la Insercion.');
 		END
 
     END
@@ -507,3 +507,17 @@ GO
 -- ============================================================================================================
 -- EJECUTAR POWERSHELL ".\ActualizarTC.ps1" PARA CARGAR TIPO DE CAMBIO BLUE (OJO CON serverName Y databaseName)
 -- ============================================================================================================
+
+-- HABILITAR LAS CONSULTAS DISTRIBUIDAS
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE
+GO
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE
+GO
+
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1
+GO
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1
+GO
+
