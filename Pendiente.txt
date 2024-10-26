@@ -1,6 +1,6 @@
 Items pendientes:
 
-- [ ] Creado de tablas:
+- [X] Creado de tablas:
 	- [X] Registro (Logs)
 	- [X] TipoCambio
 	- [X] Turno
@@ -9,13 +9,14 @@ Items pendientes:
 	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes)
 	- [X] MedioPago
 	- [X] Catalogo
-	- [ ] Venta
-	- [ ] Producto
-	- [ ] VentaDetalle
-	- [ ] SucursalProducto
+	- [X] Producto 
+	- [X] Venta (Quitar estado del DER, si la venta esta en la tabla es que se realizo y punto)
+	- [X] VentaDetalle (Quitar estado y subtotal, ya que cada venta tiene un solo producto asociado segun el csv de ventas)
+	- [X] SucursalProducto (Quitar precioLocal que no lo tengo en los datos y quitar activo)
 	
 - [ ] Stores Procedures:
 	- [ ] InsertarLog
+	- [ ] CargarTC
 	- [ ] ModificarDatos
 	- [ ] InsertarDatos
 	- [ ] EliminarDatos
