@@ -50,8 +50,7 @@ try {
         Write-Host "Fecha: $fecha" -ForegroundColor White
 
         $query = @"
-        INSERT INTO dbAuroraSA.TipoCambio (precioVenta, precioCompra, Fecha)
-        VALUES ($precioVenta, $precioCompra, '$fecha')
+		EXEC spAuroraSA.CargarTC $precioVenta, $precioCompra, '$fecha'
 "@
 
         Write-Host "`nIntentando insertar datos..." -ForegroundColor Yellow

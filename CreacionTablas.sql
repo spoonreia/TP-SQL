@@ -20,16 +20,16 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 	DROP TABLE dbAuroraSA.Venta;
 GO
 
-IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[Registro]'))
-	DROP TABLE dbAuroraSA.Registro;
+IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[logAuroraSA].[Registro]'))
+	DROP TABLE logAuroraSA.Registro;
 GO
 
-CREATE TABLE dbAuroraSA.Registro(
+CREATE TABLE logAuroraSA.Registro(
 	id		INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
 	fecha	DATE DEFAULT GETDATE(),
 	hora	TIME DEFAULT GETDATE(),
 	texto	VARCHAR(250),
-	modulo	VARCHAR(10)
+	modulo	VARCHAR(15)
 )
 GO
 
@@ -41,7 +41,7 @@ CREATE TABLE dbAuroraSA.TipoCambio(
 	idTC			INT IDENTITY(1,1),
 	precioVenta		DECIMAL(10,4) NOT NULL,
 	precioCompra	DECIMAL(10,4) NOT NULL,
-	Fecha			date NOT NULL,
+	Fecha			DATE NOT NULL,
 	
 	CONSTRAINT PK_idTipoCambio PRIMARY KEY (idTC)
 )
@@ -250,5 +250,82 @@ GO
 
 
 
--- EJECUTAR POWERSHELL ".\ActualizarTC.ps1" PARA CARGAR TIPO DE CAMBIO BLUE
+-- CREACIÓN DE STORE PROCEDURES
+-- ===========================================
+-- Procedures genéricos para insertar datos
+CREATE OR ALTER PROCEDURE spAuroraSA.[InsertarLog]
+	@texto VARCHAR(250),
+	@modulo VARCHAR(15)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	IF LTRIM(RTRIM(@modulo)) = ''
+		SET @texto = 'N/A'
+
+	INSERT INTO logAuroraSA.Registro (texto, modulo)
+	VALUES (@texto, @modulo)
+END
+GO
+
+-- CARGAR TIPO DE CAMBIO (HECHO CON POWERSHELL)
+CREATE OR ALTER PROCEDURE spAuroraSA.[CargarTC]
+	@precioVenta	DECIMAL(10,4),
+	@precioCompra	DECIMAL(10,4),
+	@fecha			DATE
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @texto VARCHAR(250);
+	DECLARE @modulo VARCHAR(15);
+
+	-- Verificar si la fecha ya existe en la tabla
+    IF EXISTS (SELECT 1 FROM dbAuroraSA.TipoCambio WHERE Fecha = @fecha)
+    BEGIN
+        -- Si la fecha ya existe, actualizar precioVenta y precioCompra
+        UPDATE dbAuroraSA.TipoCambio
+        SET precioVenta = @precioVenta,
+            precioCompra = @precioCompra
+        WHERE Fecha = @fecha;
+
+		IF @@ROWCOUNT <> 0
+		BEGIN
+			PRINT('Modificación exitosa');
+			SET @texto = 'Modif de datos en la tabla: TipoCambio. Donde: fecha = ' + convert(VARCHAR(10),@fecha,120);
+			SET @modulo = 'MODIFICACIÓN';
+			EXEC spAuroraSA.InsertarLog @texto, @modulo;
+		END
+		ELSE
+		BEGIN
+			PRINT('Error en la Modificación.');
+		END
+
+    END
+    ELSE
+    BEGIN
+        -- Si la fecha no existe, insertar un nuevo registro
+        INSERT INTO dbAuroraSA.TipoCambio (precioVenta, precioCompra, Fecha)
+        VALUES (@precioVenta, @precioCompra, @fecha);
+
+		IF @@ROWCOUNT <> 0
+		BEGIN
+			PRINT('Inserción exitosa');
+			SET @texto = 'Inserción de datos en la tabla: TipoCambio. Donde: fecha = ' + convert(VARCHAR(10),@fecha,120);
+			SET @modulo = 'INSERCIÓN';
+			EXEC spAuroraSA.InsertarLog @texto, @modulo;
+		END
+		ELSE
+		BEGIN
+			PRINT('Error en la Modificación.');
+		END
+
+    END
+
+	SET NOCOUNT OFF;
+END
+GO
+-- ============================================================================================================
+-- EJECUTAR POWERSHELL ".\ActualizarTC.ps1" PARA CARGAR TIPO DE CAMBIO BLUE (OJO CON serverName Y databaseName)
+-- ============================================================================================================
 

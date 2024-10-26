@@ -15,8 +15,8 @@ Items pendientes:
 	- [X] SucursalProducto (Quitar precioLocal que no lo tengo en los datos y quitar activo)
 	
 - [ ] Stores Procedures:
-	- [ ] InsertarLog
-	- [ ] CargarTC
+	- [X] InsertarLog
+	- [X] CargarTC
 	- [ ] ModificarDatos
 	- [ ] InsertarDatos
 	- [ ] EliminarDatos
