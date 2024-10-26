@@ -98,8 +98,12 @@ CREATE TABLE dbAuroraSA.Sucursal(
 
 	CONSTRAINT PK_idSucursal PRIMARY KEY (idSucursal),
 
-	CONSTRAINT chk_Telefono_Longitud CHECK (
+	CONSTRAINT CK_Telefono_Longitud CHECK (
 		telefono BETWEEN 1000000000 AND 9999999999 -- Chequea que sean 10 numeros de telefono
+	),
+
+	CONSTRAINT CK_ciudad CHECK(
+		ciudad in ('San Justo', 'Ramos Mejia','Lomas del Mirador')
 	)
 )
 GO
@@ -220,6 +224,7 @@ CREATE TABLE dbAuroraSA.VentaDetalle(
 	idVenta			INT NOT NULL,
 	idProducto		INT NOT NULL,
 	cantidad		INT NOT NULL,
+	genero			VARCHAR(6) NOT NULL,
 	precioUnitario	DECIMAL(10,2) NOT NULL,
 
 	CONSTRAINT PK_idVentaDetalle PRIMARY KEY (idVentaDetalle),
@@ -228,8 +233,11 @@ CREATE TABLE dbAuroraSA.VentaDetalle(
 	REFERENCES dbAuroraSA.Venta(idVenta),
 
 	CONSTRAINT FK_idProducto FOREIGN KEY (idProducto)
-	REFERENCES dbAuroraSA.Producto(idProducto)
+	REFERENCES dbAuroraSA.Producto(idProducto),
 
+	CONSTRAINT CK_generoCli CHECK(
+		genero in ('Male','Female')
+	)
 )
 GO
 
@@ -265,6 +273,108 @@ BEGIN
 
 	INSERT INTO logAuroraSA.Registro (texto, modulo)
 	VALUES (@texto, @modulo)
+END
+GO
+
+CREATE OR ALTER PROCEDURE [spAuroraSA].[ModificarDatos]
+    @nombreTabla NVARCHAR(128),
+    @columnasAActualizar NVARCHAR(MAX),
+    @valoresNuevos NVARCHAR(MAX),
+    @condicion NVARCHAR(MAX)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @SQL NVARCHAR(MAX);
+	DECLARE @texto VARCHAR(250);
+	DECLARE @modulo VARCHAR(15);
+
+    SET @SQL = N'UPDATE dbCureSA.' + QUOTENAME(@nombreTabla) +
+               N' SET ' + @columnasAActualizar +
+               N' = ' + @valoresNuevos +
+               N' WHERE ' + @condicion;
+
+    EXEC sp_executesql @SQL;
+
+	IF @@ROWCOUNT <> 0
+	BEGIN
+		PRINT('Modificación exitosa');
+		SET @texto = 'Modificación de datos en la tabla: ' + @nombreTabla + '. Donde: ' + @condicion;
+		SET @modulo = 'MODIFICACIÓN';
+		EXEC spAuroraSA.InsertarLog @texto, @modulo;
+	END
+	ELSE
+	BEGIN
+		PRINT('Error en la Modificación.');
+	END
+
+	SET NOCOUNT OFF;
+END
+GO
+
+CREATE OR ALTER PROCEDURE [spAuroraSA].[InsertarDatos]
+    @nombreTabla NVARCHAR(128),
+    @columnas NVARCHAR(MAX),
+    @valores NVARCHAR(MAX)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+    DECLARE @SQL NVARCHAR(MAX);
+	DECLARE @texto VARCHAR(250);
+	DECLARE @modulo VARCHAR(15);
+
+    SET @SQL = N'INSERT INTO dbCureSA.' + QUOTENAME(@nombreTabla) +
+               N' (' + @columnas + N') ' +
+               N'VALUES' + @valores;
+
+    EXEC sp_executesql @SQL;
+
+	IF @@ROWCOUNT <> 0
+	BEGIN
+		PRINT('Inserción exitosa');
+		SET @texto = 'Inserción de datos en la tabla: ' + @nombreTabla + '. Con: ' + @valores;
+		SET @modulo = 'INSERCIÓN';
+		EXEC spAuroraSA.InsertarLog @texto, @modulo;
+	END
+	ELSE
+	BEGIN
+		PRINT('Error en la Inserción.');
+	END
+
+	SET NOCOUNT OFF;
+END
+GO
+
+CREATE OR ALTER PROCEDURE [spAuroraSA].[EliminarDatos]
+    @nombreTabla NVARCHAR(128),
+    @condicion NVARCHAR(MAX)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+    DECLARE @SQL NVARCHAR(MAX);
+	DECLARE @texto VARCHAR(250);
+    DECLARE @modulo VARCHAR(15);
+
+    SET @SQL = N'DELETE FROM dbCureSA.' + QUOTENAME(@nombreTabla) +
+               N' WHERE ' + @condicion;
+
+    EXEC sp_executesql @SQL;
+
+	IF @@ROWCOUNT <> 0
+	BEGIN
+		PRINT('Eliminación exitosa');
+		SET @texto = 'Eliminación de datos en la tabla: ' + @nombreTabla + '. Donde: ' + @condicion;
+		SET @modulo = 'ELIMINACIÓN';
+		EXEC spAuroraSA.InsertarLog @texto, @modulo;
+	END
+	ELSE
+	BEGIN
+		PRINT('Error en la Eliminación.');
+	END
+
+	SET NOCOUNT OFF;
 END
 GO
 
@@ -328,4 +438,3 @@ GO
 -- ============================================================================================================
 -- EJECUTAR POWERSHELL ".\ActualizarTC.ps1" PARA CARGAR TIPO DE CAMBIO BLUE (OJO CON serverName Y databaseName)
 -- ============================================================================================================
-

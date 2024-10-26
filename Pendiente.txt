@@ -6,20 +6,20 @@ Items pendientes:
 	- [X] Turno
 	- [X] Empleado (CAMBIAR EL DER SEGUN EL CAMBIO EN LA TABLA) -> INT Empleado, quite las FKs
 	- [X] Sucursal (Quitar horario del DER)
-	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes)
+	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes) -> Agregarlo en VentaDetalle al genero del cliente
 	- [X] MedioPago
 	- [X] Catalogo
 	- [X] Producto 
 	- [X] Venta (Quitar estado del DER, si la venta esta en la tabla es que se realizo y punto)
-	- [X] VentaDetalle (Quitar estado y subtotal, ya que cada venta tiene un solo producto asociado segun el csv de ventas)
+	- [X] VentaDetalle (Quitar estado y subtotal, ya que cada venta tiene un solo producto asociado segun el csv de ventas) -> Agregar Genero
 	- [X] SucursalProducto (Quitar precioLocal que no lo tengo en los datos y quitar activo)
 	
 - [ ] Stores Procedures:
 	- [X] InsertarLog
 	- [X] CargarTC
-	- [ ] ModificarDatos
-	- [ ] InsertarDatos
-	- [ ] EliminarDatos
+	- [X] ModificarDatos
+	- [X] InsertarDatos
+	- [X] EliminarDatos
 	- [ ] EliminarCliente (Borrado logico con campo Activo)
 	- [ ] EliminarSucursal (Borrado logico con campo Activo)
 	- [ ] EliminarEmpleado (Borrado logico con campo Activo)
