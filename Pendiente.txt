@@ -4,11 +4,11 @@ Items pendientes:
 	- [X] Registro (Logs)
 	- [X] TipoCambio
 	- [X] Turno
-	- [ ] Empleado
-	- [ ] Sucursal
-	- [ ] Cliente
-	- [ ] MedioPago
-	- [ ] Catalogo
+	- [X] Empleado (CAMBIAR EL DER SEGUN EL CAMBIO EN LA TABLA) -> INT Empleado, quite las FKs
+	- [X] Sucursal (Quitar horario del DER)
+	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes)
+	- [X] MedioPago
+	- [X] Catalogo
 	- [ ] Venta
 	- [ ] Producto
 	- [ ] VentaDetalle

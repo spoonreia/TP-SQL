@@ -1,5 +1,5 @@
 # Parámetros de conexión SQL Server
-$serverName = "DESKTOP-RN5237S"
+$serverName = "JUST-GCASAS"
 $databaseName = "master"  # Primero conectamos a master para verificar si existe AuroraSA
 $connectionString = "Server=$serverName;Database=$databaseName;Integrated Security=True;Encrypt=False;"
 
@@ -40,8 +40,8 @@ try {
     $ventaMatch = [regex]::Match($content, 'Venta\D*(\d+,\d+)')
 
     if ($compraMatch.Success -and $ventaMatch.Success) {
-        $precioCompra = [decimal]::Parse($compraMatch.Groups[1].Value.Replace(",", ","))
-        $precioVenta = [decimal]::Parse($ventaMatch.Groups[1].Value.Replace(",", ","))
+        $precioCompra = [decimal]::Parse($compraMatch.Groups[1].Value.Replace(",", "."))
+        $precioVenta = [decimal]::Parse($ventaMatch.Groups[1].Value.Replace(",", "."))
         $fecha = Get-Date -Format "yyyy-MM-dd"
 
         Write-Host "`nValores obtenidos:" -ForegroundColor Cyan
