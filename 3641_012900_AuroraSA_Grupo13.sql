@@ -158,7 +158,7 @@ CREATE TABLE dbAuroraSA.Empleado(
 	apellido	VARCHAR (50) NOT NULL,
 	dni			INT NOT NULL,
 	direccion	VARCHAR (100) NOT NULL,
-	emailEmpre	VARCHAR (50) NOT NULL,
+	emailEmpre	VARCHAR (100) NOT NULL,
 	cargo		VARCHAR (20) NOT NULL,
 	activo		BIT DEFAULT 1,
 
@@ -471,7 +471,7 @@ BEGIN
 		IF @@ROWCOUNT <> 0
 		BEGIN
 			PRINT('Modificación exitosa');
-			SET @texto = 'Modif de datos en la tabla: TipoCambio. Donde: fecha = ' + convert(VARCHAR(10),@fecha,120);
+			SET @texto = '[dbAuroraSA.TipoCambio] - Tipo de cambio modificado.';
 			SET @modulo = 'MODIFICACIÓN';
 			EXEC spAuroraSA.InsertarLog @texto, @modulo;
 		END
@@ -490,7 +490,7 @@ BEGIN
 		IF @@ROWCOUNT <> 0
 		BEGIN
 			PRINT('Inserción exitosa');
-			SET @texto = 'Inserción de datos en la tabla: TipoCambio. Donde: fecha = ' + convert(VARCHAR(10),@fecha,120);
+			SET @texto = '[dbAuroraSA.TipoCambio] - Tipo de cambio insertado.';
 			SET @modulo = 'INSERCIÓN';
 			EXEC spAuroraSA.InsertarLog @texto, @modulo;
 		END

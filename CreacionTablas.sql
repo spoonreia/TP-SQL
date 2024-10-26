@@ -99,7 +99,7 @@ CREATE TABLE dbAuroraSA.Empleado(
 	apellido	VARCHAR (50) NOT NULL,
 	dni			INT NOT NULL,
 	direccion	VARCHAR (100) NOT NULL,
-	emailEmpre	VARCHAR (50) NOT NULL,
+	emailEmpre	VARCHAR (100) NOT NULL,
 	cargo		VARCHAR (20) NOT NULL,
 	activo		BIT DEFAULT 1,
 

@@ -8,13 +8,13 @@ Items pendientes:
 	- [X] Turno
 	- [X] Empleado
 	- [X] Sucursal
-	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes) -> Agregarlo en VentaDetalle al genero del cliente
+	- [X] Cliente
 	- [X] MedioPago
 	- [X] Catalogo
 	- [X] Producto 
-	- [X] Venta (Quitar estado del DER, si la venta esta en la tabla es que se realizo y punto)
-	- [X] VentaDetalle (Quitar estado y subtotal, ya que cada venta tiene un solo producto asociado segun el csv de ventas) -> Agregar Genero
-	- [X] SucursalProducto (Quitar precioLocal que no lo tengo en los datos y quitar activo)
+	- [X] Venta
+	- [X] VentaDetalle
+	- [X] SucursalProducto
 	
 - [ ] Stores Procedures:
 	- [X] InsertarLog
@@ -23,7 +23,7 @@ Items pendientes:
 	- [X] InsertarDatos
 	- [X] EliminarDatos
 	- [X] InsertarMasivoSucursal
-	- [ ] InsertarMasivoEmpleados
+	- [X] InsertarMasivoEmpleados 
 	- [ ] InsertarMasivoCatalogos
 	- [ ] InsertarMasivoVentas
 	- [ ] EliminarCliente (Borrado logico con campo Activo)

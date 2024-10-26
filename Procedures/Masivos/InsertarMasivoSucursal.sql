@@ -1,13 +1,6 @@
 USE AuroraSA
 GO
 
--- dbAuroraSA.Sucursal(
--- 	idSucursal	INT IDENTITY(1,1),
--- 	ciudad		VARCHAR (50) NOT NULL,
--- 	direccion	VARCHAR (150) NOT NULL,
--- 	telefono	INT,
--- 	activo		BIT DEFAULT 1,
-
 CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoSucursal
 	@rutaxls NVARCHAR(300)
 AS
@@ -16,7 +9,6 @@ BEGIN
     
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @mensaje VARCHAR(100),
-			@ilog AS NVARCHAR(250),
 			@reg AS INT
 
 	CREATE TABLE #TempSucursal (
@@ -78,3 +70,4 @@ GO
 -- select * from dbAuroraSA.Sucursal
 -- GO
 -- select * from logAuroraSA.Registro;
+-- select * from dbAuroraSA.TipoCambio;
