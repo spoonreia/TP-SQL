@@ -3,7 +3,6 @@ GO
 
 -- Creación de las tablas especificadas en el DER
 -- ==============================================
-
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[SucursalProducto]'))
 	DROP TABLE dbAuroraSA.SucursalProducto;
 GO
@@ -61,28 +60,13 @@ CREATE TABLE dbAuroraSA.Turno(
 	CONSTRAINT PK_idTurno PRIMARY KEY (idTurno),
 
 	CONSTRAINT CK_nombreTurno CHECK (
-		nombre in ('Mañana','Tarde','Noche')
+		nombre in ('Mañana','Tarde','Jornada completa')
 	)
 )
 GO
 
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[Empleado]'))
 	DROP TABLE dbAuroraSA.Empleado;
-GO
-
-CREATE TABLE dbAuroraSA.Empleado(
-	idEmpleado	INT IDENTITY(1000,1),
-	nombre		VARCHAR (50) NOT NULL,
-	apellido	VARCHAR (50) NOT NULL,
-	sexo		CHAR(1) NOT NULL,
-	activo		BIT DEFAULT 1,
-
-	CONSTRAINT PK_idEmpleado PRIMARY KEY (idEmpleado),
-
-	CONSTRAINT CK_sexo CHECK (
-		sexo in ('M','F')
-	)
-)
 GO
 
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[Sucursal]'))
@@ -104,6 +88,32 @@ CREATE TABLE dbAuroraSA.Sucursal(
 
 	CONSTRAINT CK_ciudad CHECK(
 		ciudad in ('San Justo', 'Ramos Mejia','Lomas del Mirador')
+	)
+)
+GO
+
+CREATE TABLE dbAuroraSA.Empleado(
+	idEmpleado	INT,
+	idSucursal	INT NOT NULL,
+	nombre		VARCHAR (50) NOT NULL,
+	apellido	VARCHAR (50) NOT NULL,
+	dni			INT NOT NULL,
+	direccion	VARCHAR (100) NOT NULL,
+	emailEmpre	VARCHAR (50) NOT NULL,
+	cargo		VARCHAR (20) NOT NULL,
+	activo		BIT DEFAULT 1,
+
+	CONSTRAINT PK_idEmpleado PRIMARY KEY (idEmpleado),
+
+	CONSTRAINT FK_idSucursalEmpleado FOREIGN KEY (idSucursal)
+	REFERENCES dbAuroraSA.Sucursal(idSucursal),
+
+	CONSTRAINT CK_dni CHECK (
+		dni between 10000000 and 99999999 -- DNI de 8 digitos
+	),
+
+	CONSTRAINT CK_cargo CHECK(
+		cargo in ('Cajero','Supervisor','Gerente de sucursal')
 	)
 )
 GO
