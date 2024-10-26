@@ -59,7 +59,7 @@ BEGIN
 		COMMIT TRANSACTION
     END TRY
     BEGIN CATCH
-        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS MÉDICOS'
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVAS SUCURSALES'
 		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
 
 		IF @@TRANCOUNT > 0
@@ -73,7 +73,7 @@ BEGIN
 END
 GO
 
--- EXEC spAuroraSA.InsertarMasivoSucursal 'C:\Users\gonza\OneDrive\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\Informacion_complementaria.xlsx'
+-- EXEC spAuroraSA.InsertarMasivoSucursal 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\Informacion_complementaria.xlsx'
 -- GO
 -- select * from dbAuroraSA.Sucursal
 -- GO

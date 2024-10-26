@@ -6,8 +6,8 @@ Items pendientes:
 	- [X] Registro (Logs)
 	- [X] TipoCambio
 	- [X] Turno
-	- [X] Empleado (CAMBIAR EL DER SEGUN EL CAMBIO EN LA TABLA) -> INT Empleado, deje idSucursal, agregue dni INT, quite sexo, agregue direccion VARCHAR, emailEmpre VARCHAR, cargo VARCHAR
-	- [X] Sucursal (Quitar horario del DER)
+	- [X] Empleado
+	- [X] Sucursal
 	- [X] Cliente (Quitar Genero, no tiene sentido cargarlo para los clientes) -> Agregarlo en VentaDetalle al genero del cliente
 	- [X] MedioPago
 	- [X] Catalogo
