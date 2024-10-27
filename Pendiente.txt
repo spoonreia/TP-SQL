@@ -25,7 +25,7 @@ Items pendientes:
 	- [X] InsertarMasivoSucursal
 	- [X] InsertarMasivoEmpleados 
 	- [X] InsertarMasivoCatalogos
-	- [ ] InsertarMasivoProductos
+	- [ ] InsertarMasivoProductos -> [dbAuroraSA.Producto] - 0 productos cargados del catálogo De todo. Al ejecutar hacer truncate de tabla Producto (para recalcular con el TC)
 	- [ ] InsertarMasivoVentas
 	- [ ] EliminarCliente (Borrado logico con campo Activo)
 	- [ ] EliminarSucursal (Borrado logico con campo Activo)
