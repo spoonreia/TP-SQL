@@ -10,7 +10,7 @@ Items pendientes:
 	- [X] Sucursal
 	- [X] Cliente
 	- [X] MedioPago
-	- [X] Catalogo
+	- [X] Catalogo -> Agregue nombre archivo asi lo concateno con la ruta para cargar productos.
 	- [X] Producto 
 	- [X] Venta
 	- [X] VentaDetalle
@@ -24,7 +24,8 @@ Items pendientes:
 	- [X] EliminarDatos
 	- [X] InsertarMasivoSucursal
 	- [X] InsertarMasivoEmpleados 
-	- [ ] InsertarMasivoCatalogos
+	- [X] InsertarMasivoCatalogos
+	- [ ] InsertarMasivoProductos
 	- [ ] InsertarMasivoVentas
 	- [ ] EliminarCliente (Borrado logico con campo Activo)
 	- [ ] EliminarSucursal (Borrado logico con campo Activo)

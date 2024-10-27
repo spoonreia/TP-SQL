@@ -64,10 +64,3 @@ BEGIN
     SET NOCOUNT OFF;
 END
 GO
-
--- EXEC spAuroraSA.InsertarMasivoSucursal 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\Informacion_complementaria.xlsx'
--- GO
--- select * from dbAuroraSA.Sucursal
--- GO
--- select * from logAuroraSA.Registro;
--- select * from dbAuroraSA.TipoCambio;

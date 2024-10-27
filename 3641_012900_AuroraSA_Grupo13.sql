@@ -62,9 +62,6 @@ GO
 
 -- Creación de las tablas especificadas en el DER
 -- ==============================================
-IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[SucursalProducto]'))
-	DROP TABLE dbAuroraSA.SucursalProducto;
-GO
 
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[VentaDetalle]'))
 	DROP TABLE dbAuroraSA.VentaDetalle;
@@ -216,10 +213,11 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 GO
 
 CREATE TABLE dbAuroraSA.Catalogo(
-	idCatalogo	INT IDENTITY(1,1),
-	nombre		VARCHAR (15) NOT NULL,
-	tipoArchivo CHAR(3) NOT NULL,
-	activo		BIT DEFAULT 1,
+	idCatalogo		INT IDENTITY(1,1),
+	nombre			VARCHAR (15) NOT NULL,
+	nombreArchivo	VARCHAR (50) UNIQUE NOT NULL,
+	tipoArchivo		CHAR(3) NOT NULL,
+	activo			BIT DEFAULT 1,
 
 	CONSTRAINT PK_idCatalogo PRIMARY KEY (idCatalogo),
 
@@ -228,7 +226,7 @@ CREATE TABLE dbAuroraSA.Catalogo(
 	),
 
 	CONSTRAINT CK_tipoArchivo CHECK(
-		nombre in ('CSV','XLS')
+		tipoArchivo in ('CSV','XLS')
 	)
 )
 GO
@@ -241,18 +239,14 @@ CREATE TABLE dbAuroraSA.Producto(
 	precioUnitario		DECIMAL(10,2),
 	precioReferencia	DECIMAL(10,2),
 	unidadReferencia	VARCHAR(10),
-	proveedor			VARCHAR(20),
-	cantPorUnidad		INT,
+	proveedor			VARCHAR(50),
+	cantPorUnidad		VARCHAR(50),
 	activo				BIT DEFAULT 1,
 
 	CONSTRAINT PK_idProducto PRIMARY KEY (idProducto),
 
 	CONSTRAINT FK_idCatalogo FOREIGN KEY (idCatalogo)
-	REFERENCES dbAuroraSA.Catalogo(idCatalogo),
-
-	CONSTRAINT CK_cantPorUnidad CHECK(
-		cantPorUnidad > 0
-	)
+	REFERENCES dbAuroraSA.Catalogo(idCatalogo)
 )
 GO
 
@@ -309,22 +303,6 @@ CREATE TABLE dbAuroraSA.VentaDetalle(
 	)
 )
 GO
-
-CREATE TABLE dbAuroraSA.SucursalProducto(
-	idSucursalProducto	INT IDENTITY(1,1),
-	idSucursal			INT NOT NULL,
-	idProducto			INT NOT NULL,
-
-	CONSTRAINT PK_idSucursalProducto PRIMARY KEY (idSucursalProducto),
-
-	CONSTRAINT FK_idSucursal2 FOREIGN KEY (idSucursal)
-	REFERENCES dbAuroraSA.Sucursal(idSucursal),
-
-	CONSTRAINT FK_idProducto2 FOREIGN KEY (idProducto)
-	REFERENCES dbAuroraSA.Producto(idProducto)
-)
-GO
-
 
 
 -- CREACIÓN DE STORE PROCEDURES
@@ -521,3 +499,258 @@ GO
 EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1
 GO
 
+-- Insertar masivamente las sucursales
+-- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoSucursal
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	CREATE TABLE #TempSucursal (
+            Ciudad VARCHAR(50),
+            Direccion VARCHAR(150),
+            Horario VARCHAR(100),
+            Telefono VARCHAR(20)  -- Lo pongo como VARCHAR para manejar el formato "5555-5551"
+        );
+
+    SET @sql = '
+    INSERT INTO #TempSucursal (Ciudad, Direccion, Horario, Telefono)
+    SELECT [Reemplazar por] as Ciudad, direccion, Horario, Telefono
+    FROM OPENROWSET(
+        ''Microsoft.ACE.OLEDB.12.0'',
+        ''Excel 12.0; Database=' + @rutaxls + ''',
+        ''SELECT * FROM [sucursal$]''
+    ) WHERE Ciudad IS NOT NULL';  -- Evitar filas vacías
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.Sucursal (ciudad, direccion, telefono, activo)
+        SELECT 
+            TRIM(Ciudad),
+            TRIM(Direccion),
+            CAST(LTRIM(RTRIM(REPLACE(Telefono, '-', ''))) AS INT),  -- Eliminar el guión del teléfono
+            1 -- activo por defecto
+        FROM #TempSucursal;
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.Sucursal] - ' + CAST(@reg AS VARCHAR) + N' sucursales nuevas.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVAS SUCURSALES'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempSucursal') IS NOT NULL
+        DROP TABLE #TempSucursal;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+-- Insertar masivamente los empleados
+-- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoEmpleado 
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	CREATE TABLE #TempEmpleado (
+            idEmpleado	INT,
+            nombre		VARCHAR(50),
+            apellido	VARCHAR(50),
+            dni			INT,
+			direccion	VARCHAR(100),
+			emailEmpre	VARCHAR(100),
+			cargo		VARCHAR(20),
+			sucursal	VARCHAR(30)
+        );
+
+    SET @sql = '
+    INSERT INTO #TempEmpleado (idEmpleado, nombre, apellido, dni, direccion, emailEmpre, cargo, sucursal)
+    SELECT [Legajo/ID] as idEmpleado, nombre, apellido, dni, direccion, [email empresa] as emailEmpre, cargo, sucursal
+    FROM OPENROWSET(
+        ''Microsoft.ACE.OLEDB.12.0'',
+        ''Excel 12.0; Database=' + @rutaxls + ''',
+        ''SELECT * FROM [Empleados$]''
+    ) WHERE [Legajo/ID] IS NOT NULL';  -- Evitar filas vacías
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.Empleado (idEmpleado, idSucursal, nombre, apellido, dni, direccion, emailEmpre, cargo, activo)
+        SELECT 
+            TE.idEmpleado,
+			CAST(S.idSucursal AS INT),
+			TRIM(TE.nombre),
+			TRIM(TE.apellido),
+			TE.dni,
+			TRIM(TE.direccion),
+			REPLACE(REPLACE(TE.emailEmpre, ' ', ''), CHAR(9), ''),
+			TRIM(TE.cargo),
+            1 -- activo por defecto
+        FROM #TempEmpleado TE
+		LEFT JOIN
+		dbAuroraSA.Sucursal S on S.ciudad = TE.sucursal;
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.Empleado] - ' + CAST(@reg AS VARCHAR) + N' empleados cargados.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS EMPLEADOS'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempEmpleado') IS NOT NULL
+        DROP TABLE #TempEmpleado;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+-- Insertar masivamente los catalogos
+-- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoCatalogo
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	CREATE TABLE #TempCatalogo (
+            nombre			VARCHAR(15),
+			nombreArchivo	VARCHAR(50),
+            tipoArchivo		CHAR(3)
+        );
+
+    SET @sql = '
+    INSERT INTO #TempCatalogo (nombre, nombreArchivo, tipoArchivo)
+    SELECT 
+	CASE
+		WHEN Productos LIKE ''%catalogo%'' THEN ''De todo''
+		WHEN Productos LIKE ''%electronic%'' THEN ''Electronicos''
+		WHEN Productos LIKE ''%importados%'' THEN ''Importados''
+		ELSE ''ERROR''
+	END as nombre,
+		Productos as nombreArchivo,
+	CASE WHEN
+	RIGHT(Productos,4) = ''xlsx'' THEN ''XLS''
+	WHEN RIGHT(Productos,4)= ''.csv'' THEN ''CSV''
+	ELSE ''AAA''
+	END as TipoArchivo
+    FROM OPENROWSET(
+        ''Microsoft.ACE.OLEDB.12.0'',
+        ''Excel 12.0; Database=' + @rutaxls + ''',
+        ''SELECT * FROM [catalogo$]''
+    ) WHERE Productos IS NOT NULL';  -- Evitar filas vacías
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.Catalogo(nombre, nombreArchivo, tipoArchivo, activo)
+        SELECT 
+            nombre,
+			nombreArchivo,
+			tipoArchivo,
+            1 -- activo por defecto
+        FROM #TempCatalogo;
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.Catalogo] - ' + CAST(@reg AS VARCHAR) + N' catalogos cargados.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS CATALOGOS'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempCatalogo') IS NOT NULL
+        DROP TABLE #TempCatalogo;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+
+-- CARGA DE DATOS INICIALES
+-- =====================================
+
+BEGIN TRY
+	BEGIN TRANSACTION
+
+	SET NOCOUNT ON;
+	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\';
+	DECLARE @rutainfoC 			VARCHAR(300) = @RUTA + 'Informacion_complementaria.xlsx';
+	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
+
+	EXEC spAuroraSA.InsertarMasivoSucursal @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.InsertarMasivoEmpleado @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.InsertarMasivoCatalogo @rutaxls = @rutainfoC;
+	
+	PRINT 'Carga de datos inicial COMPLETA'
+	
+	COMMIT TRANSACTION
+END TRY
+BEGIN CATCH
+	PRINT '[ERROR] - NO SE HA PODIDO IMPORTAR SATISFACTORIAMENTE UNO DE LOS ARCHIVOS'
+	PRINT '[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE()
+	
+	IF @@TRANCOUNT > 0
+		ROLLBACK TRANSACTION
+
+END CATCH
+
+SET NOCOUNT OFF;
+
+-- select * from dbAuroraSA.Catalogo;
+-- select * from dbAuroraSA.Sucursal;
+-- select * from dbAuroraSA.Empleado;
+-- select * from dbAuroraSA.Producto;

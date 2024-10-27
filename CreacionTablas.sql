@@ -3,9 +3,6 @@ GO
 
 -- Creación de las tablas especificadas en el DER
 -- ==============================================
-IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[SucursalProducto]'))
-	DROP TABLE dbAuroraSA.SucursalProducto;
-GO
 
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[VentaDetalle]'))
 	DROP TABLE dbAuroraSA.VentaDetalle;
@@ -157,10 +154,11 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 GO
 
 CREATE TABLE dbAuroraSA.Catalogo(
-	idCatalogo	INT IDENTITY(1,1),
-	nombre		VARCHAR (15) NOT NULL,
-	tipoArchivo CHAR(3) NOT NULL,
-	activo		BIT DEFAULT 1,
+	idCatalogo		INT IDENTITY(1,1),
+	nombre			VARCHAR (15) NOT NULL,
+	nombreArchivo	VARCHAR (50) UNIQUE NOT NULL,
+	tipoArchivo		CHAR(3) NOT NULL,
+	activo			BIT DEFAULT 1,
 
 	CONSTRAINT PK_idCatalogo PRIMARY KEY (idCatalogo),
 
@@ -169,7 +167,7 @@ CREATE TABLE dbAuroraSA.Catalogo(
 	),
 
 	CONSTRAINT CK_tipoArchivo CHECK(
-		nombre in ('CSV','XLS')
+		tipoArchivo in ('CSV','XLS')
 	)
 )
 GO
@@ -182,18 +180,14 @@ CREATE TABLE dbAuroraSA.Producto(
 	precioUnitario		DECIMAL(10,2),
 	precioReferencia	DECIMAL(10,2),
 	unidadReferencia	VARCHAR(10),
-	proveedor			VARCHAR(20),
-	cantPorUnidad		INT,
+	proveedor			VARCHAR(50),
+	cantPorUnidad		VARCHAR(50),
 	activo				BIT DEFAULT 1,
 
 	CONSTRAINT PK_idProducto PRIMARY KEY (idProducto),
 
 	CONSTRAINT FK_idCatalogo FOREIGN KEY (idCatalogo)
-	REFERENCES dbAuroraSA.Catalogo(idCatalogo),
-
-	CONSTRAINT CK_cantPorUnidad CHECK(
-		cantPorUnidad > 0
-	)
+	REFERENCES dbAuroraSA.Catalogo(idCatalogo)
 )
 GO
 
@@ -248,20 +242,5 @@ CREATE TABLE dbAuroraSA.VentaDetalle(
 	CONSTRAINT CK_generoCli CHECK(
 		genero in ('Male','Female')
 	)
-)
-GO
-
-CREATE TABLE dbAuroraSA.SucursalProducto(
-	idSucursalProducto	INT IDENTITY(1,1),
-	idSucursal			INT NOT NULL,
-	idProducto			INT NOT NULL,
-
-	CONSTRAINT PK_idSucursalProducto PRIMARY KEY (idSucursalProducto),
-
-	CONSTRAINT FK_idSucursal2 FOREIGN KEY (idSucursal)
-	REFERENCES dbAuroraSA.Sucursal(idSucursal),
-
-	CONSTRAINT FK_idProducto2 FOREIGN KEY (idProducto)
-	REFERENCES dbAuroraSA.Producto(idProducto)
 )
 GO
