@@ -28,6 +28,7 @@ IF EXISTS(SELECT 1 FROM SYS.DATABASES WHERE NAME = 'AuroraSA')
 GO
 
 CREATE DATABASE AuroraSA
+COLLATE Modern_Spanish_CI_AS
 GO
 
 ALTER DATABASE AuroraSA
@@ -750,7 +751,7 @@ END CATCH
 
 SET NOCOUNT OFF;
 
--- select * from dbAuroraSA.Catalogo;
--- select * from dbAuroraSA.Sucursal;
--- select * from dbAuroraSA.Empleado;
+select * from dbAuroraSA.Catalogo;
+select * from dbAuroraSA.Sucursal;
+select * from dbAuroraSA.Empleado;
 -- select * from dbAuroraSA.Producto;

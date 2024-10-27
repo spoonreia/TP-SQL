@@ -34,8 +34,8 @@ BEGIN
         DROP TABLE #TempProducto;
 
     CREATE TABLE #TempProducto (
-        categoria			NVARCHAR(100),
-        nombre				NVARCHAR(150),
+        categoria			VARCHAR(100),
+        nombre				VARCHAR(150),
         precioUnitario		DECIMAL(10, 2),
         precioReferencia	DECIMAL(10, 2),
         unidadReferencia	VARCHAR(10),
@@ -68,23 +68,20 @@ BEGIN
 				BEGIN
 					CREATE TABLE #TempProductoCSV (
 						id				INT,
-						category		NVARCHAR(100),
-						nameP			NVARCHAR(150),
+						category		VARCHAR(100),
+						nameP			VARCHAR(150),
 						price			DECIMAL(10, 2),
 						reference_price DECIMAL(10, 2),
 						reference_unit	VARCHAR(10),
 						dateP			VARCHAR(50)
 					);
 
-					SET @sql = N'BULK INSERT #TempProductoCSV FROM ''' + @archivoC + ''' WITH(CHECK_CONSTRAINTS, CODEPAGE = ''1200'', FIRSTROW = 2, FIELDTERMINATOR = '','', ROWTERMINATOR = ''\r\n'')';
-									   
-					-- Verifica cuántas filas se han insertado
-					--DECLARE @RowCount INT;
-					--SELECT @RowCount = COUNT(*) FROM #TempProductoCSV;
-					--PRINT N'Cantidad de filas en #TempProductoCSV: ' + CAST(@RowCount AS NVARCHAR);
+					SET @sql = N'BULK INSERT #TempProductoCSV FROM ''' + @archivoC + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '','', ROWTERMINATOR = ''\n'')';
+
+					EXEC sp_executesql @sql;
 
 					INSERT INTO #TempProducto(categoria,nombre,precioUnitario,precioReferencia,unidadReferencia,proveedor,cantPorUnidad)
-					SELECT category,nameP,price,reference_price,reference_unit,'Electronica' as proveedor,1
+					SELECT category,nameP,price,reference_price,reference_unit,'Generico' as proveedor,1
 					FROM #TempProductoCSV;
 
 				END
@@ -156,7 +153,12 @@ BEGIN
                 COALESCE(proveedor, NULL),
                 COALESCE(cantPorUnidad, '1'),
                 1
-            FROM #TempProducto;
+            FROM #TempProducto AS tp
+			WHERE NOT EXISTS (
+				SELECT 1 
+				FROM dbAuroraSA.Producto AS p
+				WHERE p.nombre COLLATE Modern_Spanish_CI_AS = tp.nombre COLLATE Modern_Spanish_CI_AS
+			);
 
             SET @reg = @@ROWCOUNT;
             
@@ -207,3 +209,4 @@ EXEC spAuroraSA.InsertarMasivoProducto 'C:\Users\Gosa\Documents\Facultad\Base de
 -- GO
 -- select * from logAuroraSA.Registro;
 -- select * from dbAuroraSA.TipoCambio;
+-- select * from dbAuroraSA.Catalogo;
