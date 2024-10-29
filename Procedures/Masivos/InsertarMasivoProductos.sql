@@ -110,7 +110,7 @@ BEGIN
 						SET @sql = N'
 						INSERT INTO #TempProducto (categoria,nombre,precioUnitario,proveedor,cantPorUnidad)
 						SELECT 
-							[Categoría] as categoria,
+							N''[Categoría]'' as categoria,
 							TRIM([NombreProducto]) as nombre,
 							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
 							TRIM([Proveedor]) as proveedor,
@@ -162,7 +162,7 @@ BEGIN
 
             SET @reg = @@ROWCOUNT;
             
-            SET @mensaje = N'[dbAuroraSA.Producto] - ' + CAST(@reg AS VARCHAR) + N' productos cargados del catálogo ' + @nombre;
+            SET @mensaje = N'[dbAuroraSA.Producto] - ' + CAST(@reg AS VARCHAR) + N' productos cargados del catalogo ' + @nombre;
             PRINT @mensaje;
 
             EXEC spAuroraSA.InsertarLog 
@@ -201,12 +201,3 @@ BEGIN
     SET NOCOUNT OFF;
 END;
 GO
-
--- DELETE from dbAuroraSA.Producto;
-EXEC spAuroraSA.InsertarMasivoProducto 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\Productos\'
--- GO
--- select * from dbAuroraSA.Producto
--- GO
--- select * from logAuroraSA.Registro;
--- select * from dbAuroraSA.TipoCambio;
--- select * from dbAuroraSA.Catalogo;

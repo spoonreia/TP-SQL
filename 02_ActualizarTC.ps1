@@ -1,9 +1,17 @@
-# Parámetros de conexión SQL Server
-$serverName = "DESKTOP-RN5237S"
-$databaseName = "master"  # Primero conectamos a master para verificar si existe AuroraSA
-$connectionString = "Server=$serverName;Database=$databaseName;Integrated Security=True;Encrypt=False;"
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$serverName,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$databaseName
+)
 
 Write-Host "Iniciando script de obtencion de tipo de cambio..." -ForegroundColor Green
+Write-Host "Servidor: $serverName" -ForegroundColor Yellow
+Write-Host "Base de datos: $databaseName" -ForegroundColor Yellow
+
+# Parámetros de conexión SQL Server
+$connectionString = "Server=$serverName;Database=$databaseName;Integrated Security=True;Encrypt=False;"
 
 # Verificar si existe la base de datos
 try {
@@ -34,25 +42,23 @@ try {
     Write-Host "`nIntentando conectar a dolarhoy.com..." -ForegroundColor Yellow
     $response = Invoke-WebRequest -Uri "https://dolarhoy.com/cotizaciondolarblue" -UseBasicParsing
     Write-Host "Conexion exitosa!" -ForegroundColor Green
-
     $content = $response.Content
     $compraMatch = [regex]::Match($content, 'Compra\D*(\d+,\d+)')
     $ventaMatch = [regex]::Match($content, 'Venta\D*(\d+,\d+)')
-
+    
     if ($compraMatch.Success -and $ventaMatch.Success) {
         $precioCompra = [decimal]::Parse($compraMatch.Groups[1].Value.Replace(",", ","))
         $precioVenta = [decimal]::Parse($ventaMatch.Groups[1].Value.Replace(",", ","))
         $fecha = Get-Date -Format "yyyy-MM-dd"
-
+        
         Write-Host "`nValores obtenidos:" -ForegroundColor Cyan
         Write-Host "Compra: $precioCompra" -ForegroundColor White
         Write-Host "Venta: $precioVenta" -ForegroundColor White
         Write-Host "Fecha: $fecha" -ForegroundColor White
-
+        
         $query = @"
-		EXEC spAuroraSA.CargarTC $precioVenta, $precioCompra, '$fecha'
+        EXEC spAuroraSA.CargarTC $precioVenta, $precioCompra, '$fecha'
 "@
-
         Write-Host "`nIntentando insertar datos..." -ForegroundColor Yellow
         Invoke-Sqlcmd -ConnectionString $connectionString -Query $query -ErrorAction Stop
         Write-Host "Datos insertados correctamente!" -ForegroundColor Green

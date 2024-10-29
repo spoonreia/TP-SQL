@@ -26,6 +26,7 @@ Items pendientes:
 	- [X] InsertarMasivoEmpleados 
 	- [X] InsertarMasivoCatalogos
 	- [X] InsertarMasivoProductos
+	- [ ] InsertarMasivoMediosPago
 	- [ ] InsertarMasivoVentas
 	- [ ] EliminarCliente (Borrado logico con campo Activo)
 	- [ ] EliminarSucursal (Borrado logico con campo Activo)
