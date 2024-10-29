@@ -198,13 +198,14 @@ GO
 
 CREATE TABLE dbAuroraSA.MedioPago(
 	idMedioPago	INT IDENTITY(1,1),
-	nombre		VARCHAR (50) NOT NULL,
+	nombreEN	VARCHAR (50) NOT NULL,
+	nombreES	VARCHAR (50) NOT NULL,
 	activo		BIT DEFAULT 1,
 
 	CONSTRAINT PK_idMedioPago PRIMARY KEY (idMedioPago),
 
 	CONSTRAINT CK_nombreMedioPago CHECK(
-		nombre in ('Credit card','Cash','Ewallet')
+		nombreEN in ('Credit card','Cash','Ewallet')
 	)
 )
 GO
@@ -348,7 +349,7 @@ BEGIN
 	BEGIN
 		PRINT('Modificación exitosa');
 		SET @texto = 'Modificación de datos en la tabla: ' + @nombreTabla + '. Donde: ' + @condicion;
-		SET @modulo = 'MODIFICACIÓN';
+		SET @modulo = 'MODIFICACION';
 		EXEC spAuroraSA.InsertarLog @texto, @modulo;
 	END
 	ELSE
@@ -380,14 +381,14 @@ BEGIN
 
 	IF @@ROWCOUNT <> 0
 	BEGIN
-		PRINT('Inserción exitosa');
-		SET @texto = 'Inserción de datos en la tabla: ' + @nombreTabla + '. Con: ' + @valores;
-		SET @modulo = 'INSERCIÓN';
+		PRINT('Insercion exitosa');
+		SET @texto = 'Insercion de datos en la tabla: ' + @nombreTabla + '. Con: ' + @valores;
+		SET @modulo = 'INSERCION';
 		EXEC spAuroraSA.InsertarLog @texto, @modulo;
 	END
 	ELSE
 	BEGIN
-		PRINT('Error en la Inserción.');
+		PRINT('Error en la INSERCION.');
 	END
 
 	SET NOCOUNT OFF;
@@ -451,7 +452,7 @@ BEGIN
 		BEGIN
 			PRINT('Modificación exitosa');
 			SET @texto = '[dbAuroraSA.TipoCambio] - Tipo de cambio modificado.';
-			SET @modulo = 'MODIFICACIÓN';
+			SET @modulo = 'MODIFICACION';
 			EXEC spAuroraSA.InsertarLog @texto, @modulo;
 		END
 		ELSE
@@ -468,9 +469,9 @@ BEGIN
 
 		IF @@ROWCOUNT <> 0
 		BEGIN
-			PRINT('Inserción exitosa');
+			PRINT('Insercion exitosa');
 			SET @texto = '[dbAuroraSA.TipoCambio] - Tipo de cambio insertado.';
-			SET @modulo = 'INSERCIÓN';
+			SET @modulo = 'INSERCION';
 			EXEC spAuroraSA.InsertarLog @texto, @modulo;
 		END
 		ELSE
@@ -547,7 +548,7 @@ BEGIN
         SET @mensaje = N'[dbAuroraSA.Sucursal] - ' + CAST(@reg AS VARCHAR) + N' sucursales nuevas.';
         PRINT @mensaje;
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
 		COMMIT TRANSACTION
     END TRY
@@ -624,7 +625,7 @@ BEGIN
         SET @mensaje = N'[dbAuroraSA.Empleado] - ' + CAST(@reg AS VARCHAR) + N' empleados cargados.';
         PRINT @mensaje;
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
 		COMMIT TRANSACTION
     END TRY
@@ -701,7 +702,7 @@ BEGIN
         SET @mensaje = N'[dbAuroraSA.Catalogo] - ' + CAST(@reg AS VARCHAR) + N' catalogos cargados.';
         PRINT @mensaje;
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
 		COMMIT TRANSACTION
     END TRY
@@ -720,7 +721,7 @@ BEGIN
 END
 GO
 
--- Insertar masivamente los catalogos
+-- Insertar masivamente los productos
 -- Se espera la ruta de la carpeta "Productos" para ejecutar el SP en @RUTA
 CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoProducto
     @rutaxls NVARCHAR(300)
@@ -819,7 +820,7 @@ BEGIN
 							CAST(REPLACE(REPLACE([Precio Unitario en dolares], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; Database=' + @archivoC + ''',
+							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
 							''SELECT * FROM ' + @sheet + '''
 						) WHERE [Product] IS NOT NULL;';
 
@@ -831,14 +832,14 @@ BEGIN
 						SET @sql = N'
 						INSERT INTO #TempProducto (categoria,nombre,precioUnitario,proveedor,cantPorUnidad)
 						SELECT 
-							N''[Categoría]'' as categoria,
+							[Categoría] as categoria,
 							TRIM([NombreProducto]) as nombre,
 							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
 							TRIM([Proveedor]) as proveedor,
 							TRIM([CantidadPorUnidad]) as cantPorUnidad
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; Database=' + @archivoC + ''',
+							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
 							''SELECT * FROM ' + @sheet + '''
 						) WHERE [IdProducto] IS NOT NULL;';
 
@@ -888,7 +889,7 @@ BEGIN
 
             EXEC spAuroraSA.InsertarLog 
                 @texto = @mensaje, 
-                @modulo = 'INSERCIÓN';
+                @modulo = 'INSERCION';
 
             COMMIT TRANSACTION;
 
@@ -923,6 +924,74 @@ BEGIN
 END;
 GO
 
+-- Insertar masivamente los medios de pago
+-- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoMedioPago
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	CREATE TABLE #TempMediosPago (
+            nombreEN VARCHAR(50),
+            nombreES VARCHAR(150)
+        );
+
+    SET @sql = '
+    INSERT INTO #TempMediosPago (nombreEN, nombreES)
+    SELECT a.F1 as nombreEN, a.F2 as nombreES
+	FROM OPENROWSET(
+		''Microsoft.ACE.OLEDB.12.0'',
+        ''Excel 12.0; Database=' + @rutaxls + ''',
+        ''SELECT * FROM [medios de pago$B2:C5]''
+	) a
+	WHERE a.F1 IS NOT NULL AND a.F2 IS NOT NULL';  -- Evitar filas vacías
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.MedioPago(nombreEN, nombreES, activo)
+        SELECT 
+            TRIM(nombreEN),
+            TRIM(nombreES),
+            1 -- activo por defecto
+        FROM #TempMediosPago tm
+		WHERE NOT EXISTS (
+				SELECT 1 
+				FROM dbAuroraSA.MedioPago AS m
+				WHERE m.nombreEN COLLATE Modern_Spanish_CI_AS = tm.nombreEN COLLATE Modern_Spanish_CI_AS
+			);
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.MedioPago] - ' + CAST(@reg AS VARCHAR) + N' medios de pago nuevos.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS MEDIOS DE PAGO'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempMediosPago') IS NOT NULL
+        DROP TABLE #TempMediosPago;
+
+    SET NOCOUNT OFF;
+END
+GO
 
 -- CARGA DE DATOS INICIALES
 -- =====================================

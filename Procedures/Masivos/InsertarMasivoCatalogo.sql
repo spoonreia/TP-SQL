@@ -57,7 +57,7 @@ BEGIN
         SET @mensaje = N'[dbAuroraSA.Catalogo] - ' + CAST(@reg AS VARCHAR) + N' catalogos cargados.';
         PRINT @mensaje;
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
 		COMMIT TRANSACTION
     END TRY

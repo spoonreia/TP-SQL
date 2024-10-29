@@ -34,7 +34,8 @@ BEGIN TRY
 	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
 
 	EXEC spAuroraSA.InsertarMasivoProducto @rutaxls = @rutaproductos;
-	
+	EXEC spAuroraSA.InsertarMasivoMedioPago @rutaxls = @rutainfoC;
+
 	PRINT 'Carga de datos inicial numero 2 COMPLETA'
 	
 	COMMIT TRANSACTION

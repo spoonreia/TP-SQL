@@ -46,7 +46,7 @@ BEGIN
         SET @mensaje = N'[dbAuroraSA.Sucursal] - ' + CAST(@reg AS VARCHAR) + N' sucursales nuevas.';
         PRINT @mensaje;
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCIÓN'
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
 		COMMIT TRANSACTION
     END TRY
