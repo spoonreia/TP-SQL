@@ -98,7 +98,7 @@ BEGIN
 							CAST(REPLACE(REPLACE([Precio Unitario en dolares], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
+							''Excel 12.0; HRD=YES; Database=' + @archivoC + ''',
 							''SELECT * FROM ' + @sheet + '''
 						) WHERE [Product] IS NOT NULL;';
 
@@ -110,16 +110,16 @@ BEGIN
 						SET @sql = N'
 						INSERT INTO #TempProducto (categoria,nombre,precioUnitario,proveedor,cantPorUnidad)
 						SELECT 
-							[Categoría] as categoria,
-							TRIM([NombreProducto]) as nombre,
-							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
-							TRIM([Proveedor]) as proveedor,
-							TRIM([CantidadPorUnidad]) as cantPorUnidad
+							[Categoria] as categoria,
+  							TRIM([NombreProducto]) as nombre,
+  							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
+  							TRIM([Proveedor]) as proveedor,
+  							TRIM([CantidadPorUnidad]) as cantPorUnidad
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
+							''Excel 12.0; Database=' + @archivoC + ''',
 							''SELECT * FROM ' + @sheet + '''
-						) WHERE [IdProducto] IS NOT NULL;';
+						)WHERE [IdProducto] is not NULL;';
 
 					END
 

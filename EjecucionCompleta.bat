@@ -1,10 +1,10 @@
 @echo off
 :: Configuración de variables
-set "SQL_SERVER=DESKTOP-RN5237S"
+set "SQL_SERVER=JUST-GCASAS"
 set "DATABASE=master"
-set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\01_3641_012900_AuroraSA_Grupo13.sql"
-set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\02_ActualizarTC.ps1"
-set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\03_3641_012900_AuroraSA_Grupo13.sql"
+set "SQL_SCRIPT1=C:\Users\gonza\OneDrive\Documents\Facultad\Base de datos aplicada\TP-SQL\01_3641_012900_AuroraSA_Grupo13.sql"
+set "PS_SCRIPT=C:\Users\gonza\OneDrive\Documents\Facultad\Base de datos aplicada\TP-SQL\02_ActualizarTC.ps1"
+set "SQL_SCRIPT2=C:\Users\gonza\OneDrive\Documents\Facultad\Base de datos aplicada\TP-SQL\03_3641_012900_AuroraSA_Grupo13.sql"
 
 echo Iniciando verificacion de archivos...
 

@@ -21,16 +21,16 @@ Items pendientes:
 	- [X] CargarTC
 	- [X] ModificarDatos
 	- [X] InsertarDatos
-	- [X] EliminarDatos
+	- [X] EliminarDatos -> Todos los eliminar son logicos
 	- [X] InsertarMasivoSucursal
 	- [X] InsertarMasivoEmpleados 
 	- [X] InsertarMasivoCatalogos
-	- [X] InsertarMasivoProductos
+	- [X] InsertarMasivoProductos -> Cambie el campo categoría a categoria del archivo productos_importados.xlsx
 	- [X] InsertarMasivoMediosPago
 	- [ ] InsertarMasivoVentas
-	- [ ] EliminarCliente (Borrado logico con campo Activo)
+	- [ ] EliminarCliente (Borrado logico con campo Activo) -> ActualizarEstadoCliente
 	- [ ] EliminarSucursal (Borrado logico con campo Activo)
 	- [ ] EliminarEmpleado (Borrado logico con campo Activo)
 	- [ ] EliminarProducto (Borrado logico con campo Activo)
-	- [ ] EliminarCatalogo (Borrado logico con campo Activo)
+	- [ ] EliminarCatalogo (Borrado logico con campo Activo) -> no tiene sentido el campo activo en esta tabla ya que lo manejo a nivel Producto
 	- [ ] EliminarMedioPago (Borrado logico con campo Activo)

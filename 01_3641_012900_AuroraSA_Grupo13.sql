@@ -23,12 +23,14 @@ GO
 -- Creación de la base de datos y sus esquemas
 -- ===========================================
 IF EXISTS(SELECT 1 FROM SYS.DATABASES WHERE NAME = 'AuroraSA')
-	ALTER DATABASE AuroraSA SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-	DROP DATABASE AuroraSA;
+BEGIN
+	ALTER DATABASE AuroraSA SET SINGLE_USER WITH ROLLBACK IMMEDIATE
+	DROP DATABASE AuroraSA
+END
 GO
 
 CREATE DATABASE AuroraSA
-COLLATE Modern_Spanish_CI_AS
+	COLLATE Modern_Spanish_CI_AI
 GO
 
 ALTER DATABASE AuroraSA
@@ -109,7 +111,7 @@ GO
 
 CREATE TABLE dbAuroraSA.Turno(
 	idTurno		INT IDENTITY(1,1),
-	nombre		VARCHAR (50) NOT NULL,
+	nombre		VARCHAR (20) NOT NULL,
 	horaIni		TIME NOT NULL,
 	horaFin		TIME NOT NULL,
 	activo		BIT DEFAULT 1,
@@ -414,8 +416,8 @@ BEGIN
 	IF @@ROWCOUNT <> 0
 	BEGIN
 		PRINT('Eliminación exitosa');
-		SET @texto = 'Eliminación de datos en la tabla: ' + @nombreTabla + '. Donde: ' + @condicion;
-		SET @modulo = 'ELIMINACIÓN';
+		SET @texto = 'Eliminacion de datos en la tabla: ' + @nombreTabla + '. Donde: ' + @condicion;
+		SET @modulo = 'ELIMINACION';
 		EXEC spAuroraSA.InsertarLog @texto, @modulo;
 	END
 	ELSE
@@ -820,7 +822,7 @@ BEGIN
 							CAST(REPLACE(REPLACE([Precio Unitario en dolares], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
+							''Excel 12.0; HRD=YES; Database=' + @archivoC + ''',
 							''SELECT * FROM ' + @sheet + '''
 						) WHERE [Product] IS NOT NULL;';
 
@@ -832,16 +834,16 @@ BEGIN
 						SET @sql = N'
 						INSERT INTO #TempProducto (categoria,nombre,precioUnitario,proveedor,cantPorUnidad)
 						SELECT 
-							[Categoría] as categoria,
-							TRIM([NombreProducto]) as nombre,
-							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
-							TRIM([Proveedor]) as proveedor,
-							TRIM([CantidadPorUnidad]) as cantPorUnidad
+							[Categoria] as categoria,
+  							TRIM([NombreProducto]) as nombre,
+  							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
+  							TRIM([Proveedor]) as proveedor,
+  							TRIM([CantidadPorUnidad]) as cantPorUnidad
 						FROM OPENROWSET(
 							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; HRD=YES; Database=' + @archivoC + ';Extended Properties="IMEX=1;CharacterSet=65001"'',
+							''Excel 12.0; Database=' + @archivoC + ''',
 							''SELECT * FROM ' + @sheet + '''
-						) WHERE [IdProducto] IS NOT NULL;';
+						)WHERE [IdProducto] is not NULL;';
 
 					END
 
@@ -1000,7 +1002,7 @@ BEGIN TRY
 	BEGIN TRANSACTION
 
 	SET NOCOUNT ON;
-	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\';
+	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\gonza\OneDrive\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\';
 	DECLARE @rutainfoC 			VARCHAR(300) = @RUTA + 'Informacion_complementaria.xlsx';
 	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
 
