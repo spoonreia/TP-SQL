@@ -28,7 +28,7 @@ GO
 
 -- Insertar masivamente las sucursales
 -- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
-CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoSucursal
+CREATE OR ALTER PROCEDURE spAuroraSA.SucursalInsertarMasivo
 	@rutaxls NVARCHAR(300)
 AS
 BEGIN
@@ -99,7 +99,7 @@ GO
 
 -- Insertar masivamente los empleados
 -- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
-CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoEmpleado 
+CREATE OR ALTER PROCEDURE spAuroraSA.EmpleadoInsertarMasivo
 	@rutaxls NVARCHAR(300)
 AS
 BEGIN
@@ -181,7 +181,7 @@ GO
 
 -- Insertar masivamente los catalogos
 -- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
-CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoCatalogo
+CREATE OR ALTER PROCEDURE spAuroraSA.CatalogoInsertarMasivo
 	@rutaxls NVARCHAR(300)
 AS
 BEGIN
@@ -263,7 +263,7 @@ GO
 
 -- Insertar masivamente los productos
 -- Se espera la ruta de la carpeta "Productos" para ejecutar el SP en @RUTA
-CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoProducto
+CREATE OR ALTER PROCEDURE spAuroraSA.ProductoInsertarMasivo
     @rutaxls NVARCHAR(300)
 AS
 BEGIN
@@ -272,13 +272,15 @@ BEGIN
     DECLARE @precioCompra DECIMAL(10,4);
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @archivo NVARCHAR(300);
-	DECLARE @archivoC NVARCHAR(300);
+    DECLARE @archivoC NVARCHAR(300);
     DECLARE @nombre NVARCHAR(300);
     DECLARE @tipoArchivo CHAR(3);
     DECLARE @idCatalogo INT;
     DECLARE @mensaje NVARCHAR(100);
     DECLARE @reg INT;
     DECLARE @sheet NVARCHAR(50);
+    DECLARE @contador INT = 0;
+    DECLARE @totalCatalogos INT;
 
     -- Verificar el tipo de cambio
     SELECT TOP 1 @precioCompra = precioCompra
@@ -296,102 +298,93 @@ BEGIN
         DROP TABLE #TempProducto;
 
     CREATE TABLE #TempProducto (
-        categoria			VARCHAR(100),
-        nombre				VARCHAR(150),
-        precioUnitario		DECIMAL(10, 2),
-        precioReferencia	DECIMAL(10, 2),
-        unidadReferencia	VARCHAR(10),
-        proveedor			VARCHAR(50),
-        cantPorUnidad		VARCHAR(50)
+        categoria            VARCHAR(100),
+        nombre               VARCHAR(150),
+        precioUnitario       DECIMAL(10, 2),
+        precioReferencia     DECIMAL(10, 2),
+        unidadReferencia     VARCHAR(10),
+        proveedor            VARCHAR(50),
+        cantPorUnidad        VARCHAR(50)
     );
 
-    -- Declarar el cursor
-    DECLARE catalogo_cursor CURSOR LOCAL STATIC READ_ONLY FORWARD_ONLY
-    FOR 
-        SELECT 
-            idCatalogo,
-            nombre,
-            nombreArchivo,
-            tipoArchivo
-        FROM dbAuroraSA.Catalogo
-        WHERE activo = 1;
+    -- Contar el número total de registros en el catálogo
+    SELECT @totalCatalogos = COUNT(*)
+    FROM dbAuroraSA.Catalogo
+    WHERE activo = 1;
 
-    OPEN catalogo_cursor;
-
-    FETCH NEXT FROM catalogo_cursor 
-    INTO @idCatalogo, @nombre, @archivo, @tipoArchivo;
-
-    WHILE @@FETCH_STATUS = 0
+    WHILE @contador < @totalCatalogos
     BEGIN
+        SELECT 
+            @idCatalogo = idCatalogo,
+            @nombre = nombre,
+            @archivo = nombreArchivo,
+            @tipoArchivo = tipoArchivo
+        FROM dbAuroraSA.Catalogo
+        WHERE activo = 1
+        ORDER BY idCatalogo
+        OFFSET @contador ROWS FETCH NEXT 1 ROWS ONLY;
+
         SET @archivoC = @rutaxls + @archivo;
 
         BEGIN TRY
             IF @tipoArchivo = 'CSV'
-				BEGIN
-					CREATE TABLE #TempProductoCSV (
-						id				INT,
-						category		VARCHAR(100),
-						nameP			VARCHAR(150),
-						price			DECIMAL(10, 2),
-						reference_price DECIMAL(10, 2),
-						reference_unit	VARCHAR(10),
-						dateP			VARCHAR(50)
-					);
+            BEGIN
+                CREATE TABLE #TempProductoCSV (
+                    id                 INT,
+                    category           VARCHAR(100),
+                    nameP              VARCHAR(150),
+                    price              DECIMAL(10, 2),
+                    reference_price    DECIMAL(10, 2),
+                    reference_unit     VARCHAR(10),
+                    dateP              VARCHAR(50)
+                );
 
-					SET @sql = N'BULK INSERT #TempProductoCSV FROM ''' + @archivoC + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '','', ROWTERMINATOR = ''\n'')';
+                SET @sql = N'BULK INSERT #TempProductoCSV FROM ''' + @archivoC + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '','', ROWTERMINATOR = ''\n'')';
 
-					EXEC sp_executesql @sql;
+                EXEC sp_executesql @sql;
 
-					INSERT INTO #TempProducto(categoria,nombre,precioUnitario,precioReferencia,unidadReferencia,proveedor,cantPorUnidad)
-					SELECT category,nameP,price,reference_price,reference_unit,'Generico' as proveedor,1
-					FROM #TempProductoCSV;
-
-				END
+                INSERT INTO #TempProducto(categoria, nombre, precioUnitario, precioReferencia, unidadReferencia, proveedor, cantPorUnidad)
+                SELECT category, nameP, price, reference_price, reference_unit, 'Generico' as proveedor, 1
+                FROM #TempProductoCSV;
+            END
             ELSE IF @tipoArchivo = 'XLS'
             BEGIN
                 IF @nombre = 'Electronicos'
-					BEGIN
-						SET @sheet = '[Sheet1$]'
-
-						SET @sql = N'
-						INSERT INTO #TempProducto (nombre, precioUnitario)
-						SELECT 
-							[Product] as nombre,
-							CAST(REPLACE(REPLACE([Precio Unitario en dolares], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario
-						FROM OPENROWSET(
-							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; HRD=YES; Database=' + @archivoC + ''',
-							''SELECT * FROM ' + @sheet + '''
-						) WHERE [Product] IS NOT NULL;';
-
-					END
-				ELSE
-					BEGIN
-						SET @sheet = '[Listado de Productos$]'
-						
-						SET @sql = N'
-						INSERT INTO #TempProducto (categoria,nombre,precioUnitario,proveedor,cantPorUnidad)
-						SELECT 
-							[Categoria] as categoria,
-  							TRIM([NombreProducto]) as nombre,
-  							CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
-  							TRIM([Proveedor]) as proveedor,
-  							TRIM([CantidadPorUnidad]) as cantPorUnidad
-						FROM OPENROWSET(
-							''Microsoft.ACE.OLEDB.12.0'',
-							''Excel 12.0; Database=' + @archivoC + ''',
-							''SELECT * FROM ' + @sheet + '''
-						)WHERE [IdProducto] is not NULL;';
-
-					END
-
+                BEGIN
+                    SET @sheet = '[Sheet1$]';
+                    SET @sql = N'
+                    INSERT INTO #TempProducto (nombre, precioUnitario)
+                    SELECT 
+                        [Product] as nombre,
+                        CAST(REPLACE(REPLACE([Precio Unitario en dolares], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario
+                    FROM OPENROWSET(
+                        ''Microsoft.ACE.OLEDB.12.0'',
+                        ''Excel 12.0; HRD=YES; Database=' + @archivoC + ''',
+                        ''SELECT * FROM ' + @sheet + '''
+                    ) WHERE [Product] IS NOT NULL;';
+                END
+                ELSE
+                BEGIN
+                    SET @sheet = '[Listado de Productos$]';
+                    SET @sql = N'
+                    INSERT INTO #TempProducto (categoria, nombre, precioUnitario, proveedor, cantPorUnidad)
+                    SELECT 
+                        [Categoria] as categoria,
+                        TRIM([NombreProducto]) as nombre,
+                        CAST(REPLACE(REPLACE([PrecioUnidad], '','', ''.''), ''$'', '''') AS DECIMAL(10,2)) as precioUnitario,
+                        TRIM([Proveedor]) as proveedor,
+                        TRIM([CantidadPorUnidad]) as cantPorUnidad
+                    FROM OPENROWSET(
+                        ''Microsoft.ACE.OLEDB.12.0'',
+                        ''Excel 12.0; Database=' + @archivoC + ''',
+                        ''SELECT * FROM ' + @sheet + '''
+                    ) WHERE [IdProducto] IS NOT NULL;';
+                END
                 
-				EXEC sp_executesql @sql;
+                EXEC sp_executesql @sql;
             END
 
             BEGIN TRANSACTION;
-
-            
 
             -- Insertar en la tabla final
             INSERT INTO dbAuroraSA.Producto (
@@ -416,11 +409,11 @@ BEGIN
                 COALESCE(cantPorUnidad, '1'),
                 1
             FROM #TempProducto AS tp
-			WHERE NOT EXISTS (
-				SELECT 1 
-				FROM dbAuroraSA.Producto AS p
-				WHERE p.nombre = tp.nombre COLLATE Modern_Spanish_CI_AI
-			);
+            WHERE NOT EXISTS (
+                SELECT 1 
+                FROM dbAuroraSA.Producto AS p
+                WHERE p.nombre = tp.nombre COLLATE Modern_Spanish_CI_AI
+            );
 
             SET @reg = @@ROWCOUNT;
             
@@ -446,27 +439,24 @@ BEGIN
             PRINT N'[ERROR] - [LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
         END CATCH
 
-        FETCH NEXT FROM catalogo_cursor 
-        INTO @idCatalogo, @nombre, @archivo, @tipoArchivo;
+        SET @contador = @contador + 1;
     END
-
-    CLOSE catalogo_cursor;
-    DEALLOCATE catalogo_cursor;
 
     -- Limpiar
     IF OBJECT_ID('tempdb..#TempProducto') IS NOT NULL
         DROP TABLE #TempProducto;
 
-	IF OBJECT_ID('tempdb..#TempProductoCSV') IS NOT NULL
+    IF OBJECT_ID('tempdb..#TempProductoCSV') IS NOT NULL
         DROP TABLE #TempProductoCSV;
 
     SET NOCOUNT OFF;
 END;
 GO
 
+
 -- Insertar masivamente los medios de pago
 -- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
-CREATE OR ALTER PROCEDURE spAuroraSA.InsertarMasivoMedioPago
+CREATE OR ALTER PROCEDURE spAuroraSA.MedioPagoInsertarMasivo
 	@rutaxls NVARCHAR(300)
 AS
 BEGIN

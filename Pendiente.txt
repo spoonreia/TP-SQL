@@ -22,18 +22,18 @@ Items pendientes:
 	- [X] ModificarDatos
 	- [X] InsertarDatos
 	- [X] EliminarDatos -> Todos los eliminar son logicos
-	- [X] InsertarMasivoSucursal
-	- [X] InsertarMasivoEmpleados 
-	- [X] InsertarMasivoCatalogos
-	- [X] InsertarMasivoProductos -> Cambie el campo categoría a categoria del archivo productos_importados.xlsx
-	- [X] InsertarMasivoMediosPago
-	- [ ] InsertarMasivoVentas
-	- [ ] EliminarCliente (Borrado logico con campo Activo) -> ActualizarEstadoCliente
-	- [ ] EliminarSucursal (Borrado logico con campo Activo)
-	- [ ] EliminarEmpleado (Borrado logico con campo Activo)
-	- [ ] EliminarProducto (Borrado logico con campo Activo)
-	- [ ] EliminarCatalogo (Borrado logico con campo Activo) -> no tiene sentido el campo activo en esta tabla ya que lo manejo a nivel Producto
-	- [ ] EliminarMedioPago (Borrado logico con campo Activo)
+	- [X] SucursalInsertarMasivo
+	- [X] EmpleadosInsertarMasivo 
+	- [X] CatalogosInsertarMasivo
+	- [X] ProductosInsertarMasivo -> Cambie el campo categoría a categoria del archivo productos_importados.xlsx
+	- [X] MediosPagoInsertarMasivo
+	- [ ] VentasInsertarMasivo
+	- [ ] ClienteActualizarEstado (Borrado logico con campo Activo)
+	- [ ] SucursalActualizarEstado (Borrado logico con campo Activo)
+	- [ ] EmpleadoActualizarEstado (Borrado logico con campo Activo)
+	- [ ] ProductoActualizarEstado (Borrado logico con campo Activo)
+	- [ ] CatalogoActualizarEstado (Borrado logico con campo Activo) -> no tiene sentido el campo activo en esta tabla ya que lo manejo a nivel Producto
+	- [ ] MedioPagoActualizarEstado (Borrado logico con campo Activo)
 	
 - [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas
@@ -41,6 +41,6 @@ Items pendientes:
 		creacion de importacion masivos
 		invocacion de sps
 - [X] Agregar COLLATE en los where de las tablas temporales
-- [ ] Quitar cursor y cambiarlo por un while con una i
+- [X] Quitar cursor y cambiarlo por un while con una i
 - [ ] Mirar entrega 5 para reacomodar los SCHEMAS
-- [ ] Renombrar los sps alreves, NombreTablaInsertarMasivo (asi agrupa por tabla y no por tipo de sp)
+- [X] Renombrar los sps alreves, NombreTablaInsertarMasivo (asi agrupa por tabla y no por tipo de sp)

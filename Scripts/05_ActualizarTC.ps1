@@ -72,5 +72,5 @@ catch {
     Write-Host $_.Exception.Message -ForegroundColor Red
 }
 
-Write-Host "`nPresiona cualquier tecla para cerrar..." -ForegroundColor Cyan
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+#Write-Host "`nPresiona cualquier tecla para cerrar..." -ForegroundColor Cyan
+#$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

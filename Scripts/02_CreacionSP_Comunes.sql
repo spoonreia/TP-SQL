@@ -24,7 +24,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE [spAuroraSA].[ModificarDatos]
+CREATE OR ALTER PROCEDURE [spAuroraSA].[GenericoModificarDatos]
     @nombreTabla NVARCHAR(128),
     @columnasAActualizar NVARCHAR(MAX),
     @valoresNuevos NVARCHAR(MAX),
@@ -60,7 +60,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE [spAuroraSA].[InsertarDatos]
+CREATE OR ALTER PROCEDURE [spAuroraSA].[GenericoInsertarDatos]
     @nombreTabla NVARCHAR(128),
     @columnas NVARCHAR(MAX),
     @valores NVARCHAR(MAX)
@@ -94,7 +94,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE [spAuroraSA].[EliminarDatos]
+CREATE OR ALTER PROCEDURE [spAuroraSA].[GenericoEliminarDatos]
     @nombreTabla NVARCHAR(128),
     @condicion NVARCHAR(MAX)
 AS

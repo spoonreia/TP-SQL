@@ -31,9 +31,9 @@ BEGIN TRY
 	DECLARE @rutainfoC 			VARCHAR(300) = @RUTA + 'Informacion_complementaria.xlsx';
 	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
 
-	EXEC spAuroraSA.InsertarMasivoSucursal @rutaxls = @rutainfoC;
-	EXEC spAuroraSA.InsertarMasivoEmpleado @rutaxls = @rutainfoC;
-	EXEC spAuroraSA.InsertarMasivoCatalogo @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.SucursalInsertarMasivo @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.EmpleadoInsertarMasivo @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.CatalogoInsertarMasivo @rutaxls = @rutainfoC;
 	
 	PRINT 'Carga de datos inicial numero 1 COMPLETA'
 	
