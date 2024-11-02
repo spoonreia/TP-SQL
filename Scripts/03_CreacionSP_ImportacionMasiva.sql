@@ -70,7 +70,7 @@ BEGIN
 		WHERE NOT EXISTS (
 				SELECT 1 
 				FROM dbAuroraSA.Sucursal AS s
-				WHERE TS.Ciudad = s.ciudad COLLATE Modern_Spanish_CI_AI
+				WHERE TS.Ciudad COLLATE Modern_Spanish_CI_AI = s.ciudad
 			);
 
 		SET @reg = @@ROWCOUNT;
@@ -148,11 +148,11 @@ BEGIN
             1 -- activo por defecto
         FROM #TempEmpleado TE
 		LEFT JOIN
-		dbAuroraSA.Sucursal S on S.ciudad = TE.sucursal
+		dbAuroraSA.Sucursal S on S.ciudad = TE.sucursal COLLATE Modern_Spanish_CI_AI
 		WHERE NOT EXISTS (
 				SELECT 1 
 				FROM dbAuroraSA.Empleado AS e
-				WHERE TE.idEmpleado = e.idEmpleado COLLATE Modern_Spanish_CI_AI
+				WHERE TE.idEmpleado = e.idEmpleado 
 			);
 
 		SET @reg = @@ROWCOUNT;
@@ -234,7 +234,7 @@ BEGIN
 		WHERE NOT EXISTS (
 				SELECT 1 
 				FROM dbAuroraSA.Catalogo AS c
-				WHERE tc.nombre = c.nombre COLLATE Modern_Spanish_CI_AI
+				WHERE tc.nombre COLLATE Modern_Spanish_CI_AI = c.nombre
 			);
 
 		SET @reg = @@ROWCOUNT;
@@ -269,7 +269,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    DECLARE @precioVenta DECIMAL(10,4);
+    DECLARE @precioCompra DECIMAL(10,4);
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @archivo NVARCHAR(300);
 	DECLARE @archivoC NVARCHAR(300);
@@ -281,11 +281,11 @@ BEGIN
     DECLARE @sheet NVARCHAR(50);
 
     -- Verificar el tipo de cambio
-    SELECT TOP 1 @precioVenta = precioVenta 
+    SELECT TOP 1 @precioCompra = precioCompra
     FROM dbAuroraSA.TipoCambio
     ORDER BY Fecha DESC;
 
-    IF @precioVenta IS NULL
+    IF @precioCompra IS NULL
     BEGIN
         PRINT 'Por favor ejecutar el PowerShell "ActualizarTC.ps1" para calcular el tipo de cambio actual';
         RETURN;
@@ -409,8 +409,8 @@ BEGIN
                 @idCatalogo,
                 nombre,
                 COALESCE(categoria, 'Generico'),
-                precioUnitario * @precioVenta,
-                COALESCE(precioReferencia * @precioVenta, NULL),
+                precioUnitario * @precioCompra,
+                COALESCE(precioReferencia * @precioCompra, NULL),
                 COALESCE(unidadReferencia, NULL),
                 COALESCE(proveedor, NULL),
                 COALESCE(cantPorUnidad, '1'),

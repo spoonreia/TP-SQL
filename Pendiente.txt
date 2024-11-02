@@ -35,12 +35,12 @@ Items pendientes:
 	- [ ] EliminarCatalogo (Borrado logico con campo Activo) -> no tiene sentido el campo activo en esta tabla ya que lo manejo a nivel Producto
 	- [ ] EliminarMedioPago (Borrado logico con campo Activo)
 	
-- [ ] Orden con los scripts (anotado en whatsapp)
+- [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas
 		creacion de stores comunes
 		creacion de importacion masivos
 		invocacion de sps
-- [ ] Agregar COLLATE en los where de las tablas temporales
+- [X] Agregar COLLATE en los where de las tablas temporales
 - [ ] Quitar cursor y cambiarlo por un while con una i
 - [ ] Mirar entrega 5 para reacomodar los SCHEMAS
 - [ ] Renombrar los sps alreves, NombreTablaInsertarMasivo (asi agrupa por tabla y no por tipo de sp)

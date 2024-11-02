@@ -40,7 +40,7 @@ catch {
 
 try {
     Write-Host "`nIntentando conectar a dolarhoy.com..." -ForegroundColor Yellow
-    $response = Invoke-WebRequest -Uri "https://dolarhoy.com/cotizaciondolarblue" -UseBasicParsing
+    $response = Invoke-WebRequest -Uri "https://dolarhoy.com/cotizaciondolaroficial" -UseBasicParsing
     Write-Host "Conexion exitosa!" -ForegroundColor Green
     $content = $response.Content
     $compraMatch = [regex]::Match($content, 'Compra\D*(\d+,\d+)')

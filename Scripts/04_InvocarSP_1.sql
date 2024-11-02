@@ -27,7 +27,7 @@ BEGIN TRY
 	BEGIN TRANSACTION
 
 	SET NOCOUNT ON;
-	DECLARE @RUTA				VARCHAR(100) = 'C:\Facultad\BDDA\TP-SQL\TP_integrador_Archivos\';
+	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\Daniela\Desktop\GOnsita\TP-SQL\TP_integrador_Archivos\';
 	DECLARE @rutainfoC 			VARCHAR(300) = @RUTA + 'Informacion_complementaria.xlsx';
 	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
 
