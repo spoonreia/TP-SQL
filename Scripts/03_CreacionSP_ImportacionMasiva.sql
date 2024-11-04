@@ -224,12 +224,11 @@ BEGIN
         EXEC sp_executesql @sql;
 
         -- Insertar datos en la tabla final, limpiando el formato del teléfono
-        INSERT INTO dbAuroraSA.Catalogo(nombre, nombreArchivo, tipoArchivo, activo)
+        INSERT INTO dbAuroraSA.Catalogo(nombre, nombreArchivo, tipoArchivo)
         SELECT 
             tc.nombre,
 			tc.nombreArchivo,
-			tc.tipoArchivo,
-            1 -- activo por defecto
+			tc.tipoArchivo
         FROM #TempCatalogo tc
 		WHERE NOT EXISTS (
 				SELECT 1 
@@ -309,8 +308,7 @@ BEGIN
 
     -- Contar el número total de registros en el catálogo
     SELECT @totalCatalogos = COUNT(*)
-    FROM dbAuroraSA.Catalogo
-    WHERE activo = 1;
+    FROM dbAuroraSA.Catalogo;
 
     WHILE @contador < @totalCatalogos
     BEGIN
@@ -320,7 +318,6 @@ BEGIN
             @archivo = nombreArchivo,
             @tipoArchivo = tipoArchivo
         FROM dbAuroraSA.Catalogo
-        WHERE activo = 1
         ORDER BY idCatalogo
         OFFSET @contador ROWS FETCH NEXT 1 ROWS ONLY;
 
@@ -448,6 +445,17 @@ BEGIN
 
     IF OBJECT_ID('tempdb..#TempProductoCSV') IS NOT NULL
         DROP TABLE #TempProductoCSV;
+	
+	WITH ProductosDuplicados AS (
+    SELECT 
+        idProducto,         -- La clave primaria o identificador del producto
+        nombre, 
+        ROW_NUMBER() OVER(PARTITION BY nombre ORDER BY idProducto) AS fila_numero
+    FROM dbAuroraSA.Producto
+	)
+	DELETE FROM ProductosDuplicados
+	WHERE fila_numero > 1;
+
 
     SET NOCOUNT OFF;
 END;
@@ -518,6 +526,265 @@ BEGIN
     END CATCH
     IF OBJECT_ID('tempdb..#TempMediosPago') IS NOT NULL
         DROP TABLE #TempMediosPago;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+-- Insertar masivamente los tipo de clientes
+-- Se espera la ruta del archivo "Informacion_complementaria.xlsx" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.ClienteInsertarMasivo
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	CREATE TABLE #TempCliente (
+            tipoCliente VARCHAR(20)
+        );
+
+    SET @sql = '
+    INSERT INTO dbAuroraSA.#TempCliente(tipoCliente)
+	VALUES 
+    (''Normal''),
+    (''Member'');';
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.Cliente (tipoCliente, activo)
+        SELECT 
+            TRIM(TC.tipoCliente),
+            1 -- activo por defecto
+        FROM #TempCliente TC
+		WHERE NOT EXISTS (
+				SELECT 1 
+				FROM dbAuroraSA.Cliente AS c
+				WHERE TC.tipoCliente = c.tipoCliente COLLATE Modern_Spanish_CI_AI
+			);
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.Cliente] - ' + CAST(@reg AS VARCHAR) + N' tipos de cliente nuevos.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS TIPOS DE CLIENTES'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempCliente') IS NOT NULL
+        DROP TABLE #TempCliente;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+-- Insertar masivamente las ventas
+-- Se espera la ruta del archivo "Ventas_registradas.csv" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.VentasInsertarMasivo
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+	DECLARE @tcCompra as DECIMAL;
+
+	-- Verificar el tipo de cambio
+    SELECT TOP 1 @tcCompra = precioCompra
+    FROM dbAuroraSA.TipoCambio
+    ORDER BY Fecha DESC;
+
+    IF @tcCompra IS NULL
+    BEGIN
+        PRINT 'Por favor ejecutar el PowerShell "ActualizarTC.ps1" para calcular el tipo de cambio actual';
+        RETURN;
+    END
+
+	CREATE TABLE #TempVentas (
+            idFactura	VARCHAR(20),
+			tipoFactura	VARCHAR(20),
+			ciudad		VARCHAR(20),
+			tipoCliente	VARCHAR(20),
+			genero		VARCHAR(20),
+			producto	VARCHAR(150),
+			precioUnit	VARCHAR(10),
+			cant		VARCHAR(5),
+			fecha		VARCHAR(10),
+			hora		VARCHAR(5),
+			medioPago	VARCHAR(20),
+			empleado	VARCHAR(6),
+			identifPago	VARCHAR(50)
+        );
+
+	SET @sql = N'BULK INSERT #TempVentas FROM ''' + @rutaxls + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '';'', ROWTERMINATOR = ''\n'')';
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.Venta(idFactura,tipoFactura,idCliente,idEmpleado,idSucursal,idMedioPago,identificaPago,fechaHora,montoTotal)
+        SELECT 
+            TRIM(tv.idFactura) as idFactura,
+			TRIM(tv.tipoFactura) as tipoFactura,
+			c.idCliente as idCliente,
+			CAST(tv.empleado as INT) as idEmpleado,
+			s.idSucursal as idSucursal,
+			mp.idMedioPago as idMedioPago,
+			SUBSTRING(
+				REPLACE(REPLACE(tv.identifPago, '''', ''), '-', ''),  -- Quita comillas y guiones
+				PATINDEX('%[^0]%', REPLACE(REPLACE(tv.identifPago, '''', ''), '-', '')),  -- Encuentra la primera posición de un dígito distinto de 0
+				LEN(tv.identifPago)  -- Extrae el resto de la cadena desde la primera posición no-cero
+			) AS identificaPago,
+			CONVERT(DATETIME, TRIM(tv.fecha)+ ' ' + TRIM(tv.hora), 120) AS fechaHora,
+			CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra * CAST(tv.cant as INT) as montoTotal
+        FROM #TempVentas tv
+		LEFT JOIN dbAuroraSA.Cliente c on c.tipoCliente = tv.tipoCliente COLLATE Modern_Spanish_CI_AI
+		LEFT JOIN dbAuroraSA.Sucursal AS s 
+								ON 
+									CASE 
+										WHEN tv.ciudad = 'Yangon' THEN 'San Justo'
+										WHEN tv.ciudad = 'Naypyitaw' THEN 'Ramos Mejia'
+										WHEN tv.ciudad = 'Mandalay' THEN 'Lomas del Mirador'
+										ELSE tv.ciudad  -- Para otras ciudades, mantiene el valor original
+									END = s.ciudad COLLATE Modern_Spanish_CI_AI
+		LEFT JOIN dbAuroraSA.MedioPago as mp on mp.nombreEN = tv.medioPago COLLATE Modern_Spanish_CI_AI
+		WHERE NOT EXISTS (
+				SELECT 1 
+				FROM dbAuroraSA.Venta AS v
+				WHERE v.idFactura = tv.idFactura COLLATE Modern_Spanish_CI_AI
+			)
+		
+		
+		;
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.Venta] - ' + CAST(@reg AS VARCHAR) + N' ventas nuevas.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVAS VENTAS'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempVentas') IS NOT NULL
+        DROP TABLE #TempVentas;
+
+    SET NOCOUNT OFF;
+END
+GO
+
+-- Insertar masivamente el detalle venta
+-- Se espera la ruta del archivo "Ventas_registradas.csv" para ejecutar el SP en @RUTA
+CREATE OR ALTER PROCEDURE spAuroraSA.VentaDetalleInsertarMasivo
+	@rutaxls NVARCHAR(300)
+AS
+BEGIN
+	SET NOCOUNT ON;
+    
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+	DECLARE @tcCompra as DECIMAL;
+
+	-- Verificar el tipo de cambio
+    SELECT TOP 1 @tcCompra = precioCompra
+    FROM dbAuroraSA.TipoCambio
+    ORDER BY Fecha DESC;
+
+    IF @tcCompra IS NULL
+    BEGIN
+        PRINT 'Por favor ejecutar el PowerShell "ActualizarTC.ps1" para calcular el tipo de cambio actual';
+        RETURN;
+    END
+
+	CREATE TABLE #TempVentas (
+            idFactura	VARCHAR(20),
+			tipoFactura	VARCHAR(20),
+			ciudad		VARCHAR(20),
+			tipoCliente	VARCHAR(20),
+			genero		VARCHAR(20),
+			producto	VARCHAR(150),
+			precioUnit	VARCHAR(10),
+			cant		VARCHAR(5),
+			fecha		VARCHAR(10),
+			hora		VARCHAR(5),
+			medioPago	VARCHAR(20),
+			empleado	VARCHAR(6),
+			identifPago	VARCHAR(50)
+        );
+
+	SET @sql = N'BULK INSERT #TempVentas FROM ''' + @rutaxls + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '';'', ROWTERMINATOR = ''\n'')';
+
+    BEGIN TRY
+		BEGIN TRANSACTION
+
+        EXEC sp_executesql @sql;
+
+        -- Insertar datos en la tabla final, limpiando el formato del teléfono
+        INSERT INTO dbAuroraSA.VentaDetalle(idVenta,idProducto,genero,cantidad,precioUnitario)
+        SELECT 
+            v.idVenta as idVenta,
+			p.idProducto as idProducto,
+			TRIM(tv.genero) as genero,
+			CAST(tv.cant as INT) as cantidad,
+			CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra as precioUnitario
+        FROM #TempVentas tv
+		INNER JOIN dbAuroraSA.Venta v on TRIM(tv.idFactura) = v.idFactura COLLATE Modern_Spanish_CI_AI
+		INNER JOIN dbAuroraSA.Producto p ON REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(TRIM(tv.producto), 'Ã©', 'é'),
+               'Ã¡', 'á'),'Ã±','ñ'),'Ã³','ó'),'Ã­','í'),'Ãº','ú') LIKE '%' + p.nombre + '%' COLLATE Modern_Spanish_CI_AI
+		WHERE NOT EXISTS (
+			SELECT 1 
+			FROM dbAuroraSA.VentaDetalle AS dv
+			WHERE dv.idVenta = v.idVenta
+			and dv.idProducto = p.idProducto
+		);
+
+		SET @reg = @@ROWCOUNT;
+
+        SET @mensaje = N'[dbAuroraSA.VentaDetalle] - ' + CAST(@reg AS VARCHAR) + N' detalle ventas nuevas.';
+        PRINT @mensaje;
+
+		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+
+		COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVAS VENTAS'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+		IF @@TRANCOUNT > 0
+			ROLLBACK TRANSACTION
+
+    END CATCH
+    IF OBJECT_ID('tempdb..#TempVentas') IS NOT NULL
+        DROP TABLE #TempVentas;
 
     SET NOCOUNT OFF;
 END

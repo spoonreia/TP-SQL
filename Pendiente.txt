@@ -21,19 +21,22 @@ Items pendientes:
 	- [X] CargarTC
 	- [X] ModificarDatos
 	- [X] InsertarDatos
-	- [X] EliminarDatos -> Todos los eliminar son logicos
+	- [X] EliminarDatos
 	- [X] SucursalInsertarMasivo
 	- [X] EmpleadosInsertarMasivo 
 	- [X] CatalogosInsertarMasivo
 	- [X] ProductosInsertarMasivo -> Cambie el campo categoría a categoria del archivo productos_importados.xlsx
 	- [X] MediosPagoInsertarMasivo
-	- [ ] VentasInsertarMasivo
-	- [ ] ClienteActualizarEstado (Borrado logico con campo Activo)
-	- [ ] SucursalActualizarEstado (Borrado logico con campo Activo)
-	- [ ] EmpleadoActualizarEstado (Borrado logico con campo Activo)
-	- [ ] ProductoActualizarEstado (Borrado logico con campo Activo)
-	- [ ] CatalogoActualizarEstado (Borrado logico con campo Activo) -> no tiene sentido el campo activo en esta tabla ya que lo manejo a nivel Producto
-	- [ ] MedioPagoActualizarEstado (Borrado logico con campo Activo)
+	- [X] ClienteInsertarMasivo
+	- [X] VentasInsertarMasivo
+	- [ ] TurnoInsertarMasivo
+	- [ ] VentaDetalleInsertarMasivo -> ¿bien? tengo un tema con la decodificacion UTF 8 BOMB para cargar idProducto segun el nombre.
+	- [X] ClienteActualizarEstado (Borrado logico con campo Activo)
+	- [X] SucursalActualizarEstado (Borrado logico con campo Activo)
+	- [X] EmpleadoActualizarEstado (Borrado logico con campo Activo)
+	- [X] ProductoActualizarEstado (Borrado logico con campo Activo)
+	- [X] MedioPagoActualizarEstado (Borrado logico con campo Activo)
+	- [ ] TurnoActualizarEstado (Borrado logico con campo Activo)
 	
 - [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas
@@ -44,3 +47,4 @@ Items pendientes:
 - [X] Quitar cursor y cambiarlo por un while con una i
 - [ ] Mirar entrega 5 para reacomodar los SCHEMAS
 - [X] Renombrar los sps alreves, NombreTablaInsertarMasivo (asi agrupa por tabla y no por tipo de sp)
+- [ ] Deberia poner todos campos VARCHAR en las tablas temporales de los SP masivos, traerme la data cruda a la temporal y recien ahi trabajarla.

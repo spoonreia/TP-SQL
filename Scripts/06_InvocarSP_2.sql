@@ -31,12 +31,15 @@ BEGIN TRY
 	BEGIN TRANSACTION
 
 	SET NOCOUNT ON;
-	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\Daniela\Desktop\GOnsita\TP-SQL\TP_integrador_Archivos\';
+	DECLARE @RUTA				VARCHAR(100) = 'C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\TP_integrador_Archivos\';
 	DECLARE @rutainfoC 			VARCHAR(300) = @RUTA + 'Informacion_complementaria.xlsx';
 	DECLARE @rutaproductos 		VARCHAR(300) = @RUTA + 'Productos\';
+	DECLARE @rutaventas 		VARCHAR(300) = @RUTA + 'Ventas_registradas.csv';
 
 	EXEC spAuroraSA.ProductoInsertarMasivo @rutaxls = @rutaproductos;
 	EXEC spAuroraSA.MedioPagoInsertarMasivo @rutaxls = @rutainfoC;
+	EXEC spAuroraSA.VentasInsertarMasivo @rutaxls = @rutaventas;
+	EXEC spAuroraSA.VentaDetalleInsertarMasivo @rutaxls = @rutaventas;
 
 	PRINT 'Carga de datos inicial numero 2 COMPLETA'
 	

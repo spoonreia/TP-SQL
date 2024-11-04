@@ -1,14 +1,14 @@
 @echo off
 :: Configuración de variables
-set "SQL_SERVER=DESKTOP-99MHB05\SQLEXPRESS"
+set "SQL_SERVER=DESKTOP-RN5237S\SQLEXPRESS"
 set "DATABASE=master"
-set "SQL_SCRIPT1=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\01_CreacionBase_Tablas.sql"
-set "SQL_SCRIPT2=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\02_CreacionSP_Comunes.sql"
-set "SQL_SCRIPT3=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\03_CreacionSP_ImportacionMasiva.sql"
-set "SQL_SCRIPT4=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\04_InvocarSP_1.sql"
-set "SQL_SCRIPT5=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\06_InvocarSP_2.sql"
+set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\01_CreacionBase_Tablas.sql"
+set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\02_CreacionSP_Comunes.sql"
+set "SQL_SCRIPT3=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\03_CreacionSP_ImportacionMasiva.sql"
+set "SQL_SCRIPT4=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\04_InvocarSP_1.sql"
+set "SQL_SCRIPT5=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\06_InvocarSP_2.sql"
 
-set "PS_SCRIPT=C:\Users\Daniela\Desktop\GOnsita\TP-SQL\Scripts\05_ActualizarTC.ps1"
+set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\05_ActualizarTC.ps1"
 
 
 echo Iniciando verificacion de archivos...

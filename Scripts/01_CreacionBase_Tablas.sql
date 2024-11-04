@@ -207,7 +207,6 @@ CREATE TABLE dbAuroraSA.Catalogo(
 	nombre			VARCHAR (15) NOT NULL,
 	nombreArchivo	VARCHAR (50) UNIQUE NOT NULL,
 	tipoArchivo		CHAR(3) NOT NULL,
-	activo			BIT DEFAULT 1,
 
 	CONSTRAINT PK_idCatalogo PRIMARY KEY (idCatalogo),
 
@@ -248,7 +247,7 @@ CREATE TABLE dbAuroraSA.Venta(
 	idEmpleado			INT NOT NULL,
 	idSucursal			INT NOT NULL,
 	idMedioPago			INT NOT NULL,
-	identificaPago		CHAR(16),
+	identificaPago		VARCHAR(16),
 	fechaHora			DATETIME NOT NULL,
 	montoTotal			DECIMAL(10,2) NOT NULL,
 

@@ -183,3 +183,143 @@ BEGIN
 	SET NOCOUNT OFF;
 END
 GO
+
+-- Actualizar estado, recibe como parametro el id y el nuevo estado (0 o 1)
+CREATE OR ALTER PROCEDURE spAuroraSA.ClienteActualizarEstado
+    @idCliente INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Cliente WHERE IdCliente = @idCliente)
+    BEGIN
+        PRINT 'Cliente no encontrado.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.Cliente
+    SET Activo = @nuevoEstado
+    WHERE IdCliente = @idCliente;
+
+	SET @mensaje = N'[dbAuroraSA.Cliente] - Cliente id ' + CAST(@idCliente AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
+
+-- Actualizar estado, recibe como parametro el id y el nuevo estado (0 o 1)
+CREATE OR ALTER PROCEDURE spAuroraSA.SucursalActualizarEstado
+    @idSucursal INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Sucursal WHERE idSucursal = @idSucursal)
+    BEGIN
+        PRINT 'Sucursal no encontrada.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.Sucursal
+    SET Activo = @nuevoEstado
+    WHERE idSucursal = @idSucursal;
+
+	SET @mensaje = N'[dbAuroraSA.Sucursal] - Sucursal id ' + CAST(@idSucursal AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
+
+-- Actualizar estado, recibe como parametro el id y el nuevo estado (0 o 1)
+CREATE OR ALTER PROCEDURE spAuroraSA.EmpleadoActualizarEstado
+    @idEmpleado INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Empleado WHERE idEmpleado = @idEmpleado)
+    BEGIN
+        PRINT 'Empleado no encontrado.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.Empleado
+    SET Activo = @nuevoEstado
+    WHERE idEmpleado = @idEmpleado;
+
+	SET @mensaje = N'[dbAuroraSA.Empleado] - Empleado id ' + CAST(@idEmpleado AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
+
+-- Actualizar estado, recibe como parametro el id y el nuevo estado (0 o 1)
+CREATE OR ALTER PROCEDURE spAuroraSA.ProductoActualizarEstado
+    @idProducto INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Producto WHERE idProducto = @idProducto)
+    BEGIN
+        PRINT 'Producto no encontrado.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.Producto
+    SET Activo = @nuevoEstado
+    WHERE idProducto = @idProducto;
+
+	SET @mensaje = N'[dbAuroraSA.Producto] - Producto id ' + CAST(@idProducto AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
+
+-- Actualizar estado, recibe como parametro el id y el nuevo estado (0 o 1)
+CREATE OR ALTER PROCEDURE spAuroraSA.MedioPagoActualizarEstado
+    @idMedioPago INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.MedioPago WHERE idMedioPago = @idMedioPago)
+    BEGIN
+        PRINT 'Medio de pago no encontrado.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.MedioPago
+    SET Activo = @nuevoEstado
+    WHERE idMedioPago = @idMedioPago;
+
+	SET @mensaje = N'[dbAuroraSA.MedioPago] - MedioPago id ' + CAST(@idMedioPago AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
