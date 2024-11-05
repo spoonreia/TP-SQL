@@ -1,0 +1,70 @@
+Configuraciones:
+----------------
+
+Se instala SQL Server:
+	- Sin machine learning
+	- Sin replicas
+
+
+*Collation
+----------
+Modern_Spanish_CI_AI
+
+*Seguridad: 
+-----------
+Modo de Autenticación: Mixto 
+	- Sql Server Authentication: User y Password  
+	- Windows Authentication
+
+
+*Ubicacion de archivos:
+-----------------------
+Nota: Las direcciones del servidor deben ser alojados en una particion fuera del sistema operativo, al contar con una sola particion lo dejamos en disco C.
+
+Sql Server Directory: C:\ProgramFiles\MicrosoftSQLServer\MSSQL15.SQLEXPRESS
+
+Root Directory: C:\ProgramFiles\MicrosoftSQLServer\
+
+System database Directory: C:\ProgramFiles\MicrosoftSQLServer\MSSQL15.SQLEXPRESS\MSSQL\Data
+
+User database Directory: C:\ProgramFiles\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\Data
+
+Log database Directory: C:\ProgramFiles\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\Data
+
+Backup Directory:C:\ProgramFiles\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\Backup
+
+
+*TempDB 
+--------------
+Tamaño inicial: 8MB
+Autocremiento: 64MB
+Ubicacion: C:\ProgramFiles\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\Data\tempdb.mdf
+
+*TempDB log
+--------------
+Tamaño inicial: 8 MB
+Autocremiento: 64MB
+Ubicacion: C:\ProgramFiles\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\Data\templog.ldf
+
+*Memory
+--------------
+Min: 0 MB
+Max: 1410MB
+
+*Filestream
+--------------
+No activo
+
+
+*Conectividad
+--------------
+Puerto: 1433
+
+
+
+
+
+
+
+
+

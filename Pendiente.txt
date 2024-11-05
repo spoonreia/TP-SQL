@@ -47,8 +47,10 @@ Items pendientes:
 	- [X] ReporteVentasFechaSucursal
 
 - [ ] Seguridad:
-	- [X] Encriptar algunos datos de empleados.
-	- [ ] Hacer tabla nota de credito (junto a que solo pueda ejecutarlo un supervisor)
+	- [ ] Encriptar algunos datos de empleados.
+	- [X] Agregar permisos de vendedor y supervisor.
+	- [X] Hacer tabla nota de credito (junto a que solo pueda ejecutarlo un supervisor).
+	- [X] Agregar SP de BKP y crear un job para realizar bkps diarios.
 	
 	
 - [X] Orden con los scripts (anotado en whatsapp)
