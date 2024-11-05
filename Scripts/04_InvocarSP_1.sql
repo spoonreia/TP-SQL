@@ -1,6 +1,9 @@
 /*
-	GRUPO 13:
-		Casas, Gonzalo Agustin		DNI:44004892		
+	Asignatura: Base de datos aplicada
+	Fecha de entrega: 05-11-2024
+	Comision: 01-2900
+	Grupo 13:
+		Casas, Gonzalo Agustin		DNI:44004892
 */
 
 /*
@@ -9,11 +12,8 @@ Antes de ejecutar este script cambiar la siguiente variable '@RUTA'
 del archivo para realizar la carga de datos masiva, indique el path 
 correcto con sus archivos de carga.
 
-	@rutaventas		
-	@rutacatalogo 	
-	@rutaelectronic_accesories
-	@rutaproductos_importados 	
-	@rutainfocomplementaria
+	@rutainfoC		
+	@rutaproductos
 
 */
 
