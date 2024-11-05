@@ -39,7 +39,8 @@ BEGIN TRY
 	EXEC spAuroraSA.ProductoInsertarMasivo @rutaxls = @rutaproductos;
 	EXEC spAuroraSA.MedioPagoInsertarMasivo @rutaxls = @rutainfoC;
 	EXEC spAuroraSA.VentasInsertarMasivo @rutaxls = @rutaventas;
-	EXEC spAuroraSA.VentaDetalleInsertarMasivo @rutaxls = @rutaventas;
+	EXEC spAuroraSA.VentaDetalleInsertarMasivo @rutaxls = @rutaventas; -- ARCHIVO MAL FORMADO, TIENE MUCHOS ERRORES DE TILDES / Ñ's QUE CON NINGUN EDITOR DE TEXTO ES POSIBLE ABRIR. SE IMPORTO COMO SE PUDO.
+	EXEC spAuroraSA.TurnoInsertarMasivo;
 
 	PRINT 'Carga de datos inicial numero 2 COMPLETA'
 	

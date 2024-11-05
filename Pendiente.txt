@@ -16,7 +16,7 @@ Items pendientes:
 	- [X] VentaDetalle
 	- [X] SucursalProducto
 	
-- [ ] Stores Procedures:
+- [X] Stores Procedures:
 	- [X] InsertarLog
 	- [X] CargarTC
 	- [X] ModificarDatos
@@ -29,14 +29,27 @@ Items pendientes:
 	- [X] MediosPagoInsertarMasivo
 	- [X] ClienteInsertarMasivo
 	- [X] VentasInsertarMasivo
-	- [ ] TurnoInsertarMasivo
-	- [ ] VentaDetalleInsertarMasivo -> ¿bien? tengo un tema con la decodificacion UTF 8 BOMB para cargar idProducto segun el nombre.
+	- [X] TurnoInsertarMasivo
+	- [X] VentaDetalleInsertarMasivo -> ¿bien? tengo un tema con la decodificacion UTF 8 BOMB para cargar idProducto segun el nombre.
 	- [X] ClienteActualizarEstado (Borrado logico con campo Activo)
 	- [X] SucursalActualizarEstado (Borrado logico con campo Activo)
 	- [X] EmpleadoActualizarEstado (Borrado logico con campo Activo)
 	- [X] ProductoActualizarEstado (Borrado logico con campo Activo)
 	- [X] MedioPagoActualizarEstado (Borrado logico con campo Activo)
-	- [ ] TurnoActualizarEstado (Borrado logico con campo Activo)
+	- [X] TurnoActualizarEstado (Borrado logico con campo Activo)
+	
+- [X] Reportes XML:
+	- [X] ReporteMensual
+	- [X] ReporteTrimestral
+	- [X] ReporteProductosRango
+	- [X] ReporteSucursalRango
+	- [X] ReporteTopProductosMes
+	- [X] ReporteVentasFechaSucursal
+
+- [ ] Seguridad:
+	- [X] Encriptar algunos datos de empleados.
+	- [ ] Hacer tabla nota de credito (junto a que solo pueda ejecutarlo un supervisor)
+	
 	
 - [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas

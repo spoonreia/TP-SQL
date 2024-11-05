@@ -789,3 +789,119 @@ BEGIN
     SET NOCOUNT OFF;
 END
 GO
+
+-- Insertar turnos masivos
+CREATE OR ALTER PROCEDURE spAuroraSA.TurnoInsertarMasivo
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+	DECLARE @mensaje VARCHAR(100),
+			@reg AS INT
+
+	SET @reg = 0;
+    
+    BEGIN TRY
+        BEGIN TRANSACTION;
+            -- Validar si ya existen registros
+            IF EXISTS (SELECT 1 FROM dbAuroraSA.Turno)
+            BEGIN
+                PRINT('Ya existen turnos registrados en la tabla.');
+                RETURN;
+            END
+
+            -- Insertar turno Mañana
+            INSERT INTO dbAuroraSA.Turno (nombre, horaIni, horaFin, activo)
+            VALUES ('Maniana', '08:00:00', '12:00:00', 1);
+
+			set @reg+=1;
+
+            -- Insertar turno Tarde
+            INSERT INTO dbAuroraSA.Turno (nombre, horaIni, horaFin, activo)
+            VALUES ('Tarde', '12:01:00', '21:00:00', 1);
+
+			set @reg+=1;
+
+            -- Insertar Jornada completa
+            INSERT INTO dbAuroraSA.Turno (nombre, horaIni, horaFin, activo)
+            VALUES ('Jornada completa', '08:00:00', '21:00:00', 1);
+
+			set @reg+=1;
+
+			SET @mensaje = N'[dbAuroraSA.Turno] - ' + CAST(@reg AS VARCHAR) + N' turnos nuevos.';
+			PRINT @mensaje;
+
+			EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+
+		PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVOS TURNOS'
+		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+GO
+
+-- Stored Procedure para insertar nota de crédito (solo supervisores)
+CREATE OR ALTER PROCEDURE spAuroraSA.NotaCreditoInsertar
+    @IdVenta INT,
+    @IdEmpleado INT,
+    @MontoTotal DECIMAL(18,2),
+    @Motivo VARCHAR(500),
+    @TipoDevolucion VARCHAR(10),
+    @IdProductoNuevo INT = NULL
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100)
+    SET NOCOUNT ON;
+    
+    -- Verificar si el empleado es supervisor
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM dbAuroraSA.Empleado 
+        WHERE IdEmpleado = @IdEmpleado 
+        AND cargo = 'Supervisor'
+    )
+    BEGIN
+        PRINT ('Solo supervisores pueden generar notas de crédito');
+        RETURN;
+    END
+
+    -- Verificar si la venta existe y está pagada
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM dbAuroraSA.Venta 
+        WHERE IdVenta = @IdVenta 
+        AND IdentificaPago IS NOT NULL
+    )
+    BEGIN
+        PRINT ('La venta debe existir y estar pagada');
+        RETURN;
+    END
+
+    INSERT INTO dbAuroraSA.NotaCredito (
+        IdVenta,
+        IdEmpleado,
+        MontoTotal,
+        Motivo,
+        TipoDevolucion,
+        IdProductoNuevo
+    )
+    VALUES (
+        @IdVenta,
+        @IdEmpleado,
+        @MontoTotal,
+        @Motivo,
+        @TipoDevolucion,
+        @IdProductoNuevo
+    );
+
+	SET @mensaje = N'[dbAuroraSA.NotaCredito] - 1 nota de credito nueva.';
+	PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+END;

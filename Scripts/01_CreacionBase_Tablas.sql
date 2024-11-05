@@ -26,7 +26,7 @@ USE AuroraSA
 GO
 
 
-
+-- Esquema para todas las tablas
 IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'dbAuroraSA')
 	DROP SCHEMA dbAuroraSA;
 GO
@@ -34,6 +34,7 @@ GO
 CREATE SCHEMA dbAuroraSA;
 GO
 
+-- Esquema para todos los SPs
 IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'spAuroraSA')
 	DROP SCHEMA spAuroraSA;
 GO
@@ -41,6 +42,8 @@ GO
 CREATE SCHEMA spAuroraSA
 GO
 
+
+-- Esquema para la tabla de logs
 IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'logAuroraSA')
 	DROP SCHEMA logAuroraSA;
 GO
@@ -105,7 +108,7 @@ CREATE TABLE dbAuroraSA.Turno(
 	CONSTRAINT PK_idTurno PRIMARY KEY (idTurno),
 
 	CONSTRAINT CK_nombreTurno CHECK (
-		nombre in ('Mañana','Tarde','Jornada completa')
+		nombre in ('Maniana','Tarde','Jornada completa')
 	)
 )
 GO
@@ -292,3 +295,26 @@ CREATE TABLE dbAuroraSA.VentaDetalle(
 	)
 )
 GO
+
+IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[NotaCredito]'))
+	DROP TABLE dbAuroraSA.NotaCredito;
+GO
+
+-- Crear tabla NotaCredito
+CREATE TABLE dbAuroraSA.NotaCredito (
+    IdNotaCredito INT PRIMARY KEY IDENTITY(1,1),
+    IdVenta INT NOT NULL,
+    IdEmpleado INT NOT NULL,
+    FechaEmision DATETIME DEFAULT GETDATE(),
+    MontoTotal DECIMAL(18,2) NOT NULL,
+    Estado CHAR(1) DEFAULT 'P', -- P: Pendiente, A: Aprobado, R: Rechazado
+    Motivo VARCHAR(500) NOT NULL,
+    TipoDevolucion VARCHAR(10) NOT NULL CHECK (TipoDevolucion IN ('EFECTIVO', 'PRODUCTO')),
+    IdProductoNuevo INT NULL,
+    CONSTRAINT FK_NotaCredito_Venta FOREIGN KEY (IdVenta) 
+        REFERENCES dbAuroraSA.Venta(IdVenta) ON DELETE NO ACTION,
+    CONSTRAINT FK_NotaCredito_Empleado FOREIGN KEY (IdEmpleado) 
+        REFERENCES dbAuroraSA.Empleado(IdEmpleado),
+    CONSTRAINT FK_NotaCredito_ProductoNuevo FOREIGN KEY (IdProductoNuevo) 
+        REFERENCES dbAuroraSA.Producto(IdProducto)
+);

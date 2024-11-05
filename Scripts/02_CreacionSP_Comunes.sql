@@ -323,3 +323,30 @@ BEGIN
 
 END
 GO
+
+CREATE OR ALTER PROCEDURE spAuroraSA.TurnoActualizarEstado
+    @idTurno INT,
+    @nuevoEstado BIT
+AS
+BEGIN
+	DECLARE @mensaje VARCHAR(100);
+
+    -- Verifica si el cliente existe
+    IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Turno WHERE idTurno = @idTurno)
+    BEGIN
+        PRINT 'Turno no encontrado.';
+        RETURN;
+    END
+
+    -- Actualiza el estado del cliente
+    UPDATE dbAuroraSA.Turno
+    SET Activo = @nuevoEstado
+    WHERE idTurno = @idTurno;
+
+	SET @mensaje = N'[dbAuroraSA.Turno] - Turno id ' + CAST(@idTurno AS VARCHAR) + N' con estado en ' + CAST(@nuevoEstado AS VARCHAR);
+        PRINT @mensaje;
+
+	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'MODIFICACION'
+
+END
+GO
