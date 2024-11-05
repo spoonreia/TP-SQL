@@ -53,6 +53,7 @@ Items pendientes:
 	- [X] Agregar SP de BKP y crear un job para realizar bkps diarios.
 	
 	
+- [ ] Terminar de agregar en carpeta Scripts todos los SPs que creé
 - [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas
 		creacion de stores comunes
