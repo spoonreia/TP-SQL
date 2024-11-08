@@ -37,6 +37,10 @@ Items pendientes:
 	- [X] ProductoActualizarEstado (Borrado logico con campo Activo)
 	- [X] MedioPagoActualizarEstado (Borrado logico con campo Activo)
 	- [X] TurnoActualizarEstado (Borrado logico con campo Activo)
+	- [ ] ABM para cada tabla (Alta, baja -> Actualizar estado, modificar)
+	- [ ] VentaInsertar (Debe insertar en tabla Venta y VentaDetalle)
+	- [ ] modificarDetalleVenta y CrearDetalleVenta -> Si viene id_producto junto a id_factura que ya existe, tengo q actualizar segun cantidad. Si llegase a venir -5 cuando en cantidad tenia 5, podria hasta hacer un delete.
+	
 	
 - [X] Reportes XML:
 	- [X] ReporteMensual
@@ -47,11 +51,22 @@ Items pendientes:
 	- [X] ReporteVentasFechaSucursal
 
 - [ ] Seguridad:
-	- [ ] Encriptar algunos datos de empleados.
+	- [ ] Encriptar algunos datos de empleados. -> Debo cambiar el tipo de datos de 2 o 3 campos para que cuando se inserten sea encriptados (No usar nombre y apellido)
+			Que en el test aparezca la insercion de datos, atras un select y atras un reporte con los campos desencriptados.
 	- [X] Agregar permisos de vendedor y supervisor.
 	- [X] Hacer tabla nota de credito (junto a que solo pueda ejecutarlo un supervisor).
 	- [X] Agregar SP de BKP y crear un job para realizar bkps diarios.
 	
+- [ ] Preparar test de prueba:
+	- [ ] Preparar lotes de prueba para insertar en cada tabla. Al menos 1 que ande y uno que falle.
+	- [ ] Preparar lotes de prueba para dar de baja (baja logica) en cada tabla.
+	- [ ] Preparar lotes de prueba para modificar en cada tabla.
+	- [ ] En el test de Encriptar datos de empleados aparezca la insercion de datos, atras un select y atras un reporte con los campos desencriptados.
+	
+- [ ] Agregar a proyecto de sql server los scripts sql
+- [ ] Agregar punto de venta en tabla NotaCredito max 4/5
+- [ ] Agregar numero de comprobante en tabla NotaCredito max 8 digitos
+
 - [X] Documento .doc detallando cada entrega.
 - [X] Orden con los scripts (anotado en whatsapp)
 		creacion de base y tablas
@@ -61,5 +76,4 @@ Items pendientes:
 - [X] Agregar COLLATE en los where de las tablas temporales
 - [X] Quitar cursor y cambiarlo por un while con una i
 - [X] Renombrar los sps alreves, NombreTablaInsertarMasivo (asi agrupa por tabla y no por tipo de sp)
-- [ ] Mirar entrega 5 para reacomodar los SCHEMAS
 - [ ] Deberia poner todos campos VARCHAR en las tablas temporales de los SP masivos, traerme la data cruda a la temporal y recien ahi trabajarla.

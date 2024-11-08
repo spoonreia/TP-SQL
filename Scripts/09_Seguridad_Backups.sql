@@ -71,7 +71,10 @@ EXEC dbo.sp_add_job
 EXEC sp_add_jobstep
     @job_name = N'Daily_Ventas_Backup', 
     @step_name = N'Execute Backup', -- descripción de lo que hace.
-    @subsystem = N'TSQL', -- Define que el paso ejecutará un comando T-SQL (Transact-SQL)
+    @subsystem = N'TSQL',	-- Define que el paso ejecutará un comando T-SQL (Transact-SQL) --
+							-- cuando queremos que el trabajo ejecute un script SQL directamente 
+							-- dentro del entorno de SQL Server, como BACKUP DATABASE, consultas 
+							-- de actualización, procedimientos almacenados, etc.
     @command = N'USE AuroraSA; EXEC spAuroraSA.BackupAuroraSA'; -- realiza la operación de respaldo para los datos de AuroraSA
 
 EXEC dbo.sp_add_schedule
