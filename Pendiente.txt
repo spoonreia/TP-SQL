@@ -66,6 +66,7 @@ Items pendientes:
 - [ ] Agregar a proyecto de sql server los scripts sql
 - [ ] Agregar punto de venta en tabla NotaCredito max 4/5
 - [ ] Agregar numero de comprobante en tabla NotaCredito max 8 digitos
+- [ ] Agregar a venta un campo que sea IVA = Monto * 1.21. Asumiendo que siempre las ventas son para un consumidor final.
 
 - [X] Documento .doc detallando cada entrega.
 - [X] Orden con los scripts (anotado en whatsapp)
