@@ -14,23 +14,6 @@ CREATE ROLE Supervisor;
 CREATE ROLE Vendedor;
 GO
 
--- Encriptación de datos sensibles de empleados
--- ALTER TABLE dbAuroraSA.Empleado
--- ADD CONSTRAINT EncryptPersonalData
---     CHECK (
---         CONNECTIONPROPERTY('ENCRYPTIONENABLED') = 1
---     );
-
--- Cifrar columnas sensibles
--- ALTER TABLE dbAuroraSA.Empleado
--- ALTER COLUMN nombre varbinary(256);
--- ALTER TABLE dbAuroraSA.Empleado
--- ALTER COLUMN apellido varbinary(256);
--- ALTER TABLE dbAuroraSA.Empleado
--- ALTER COLUMN emailEmpre varbinary(256);
-
-GO
-
 -- Permitir ejecución de todos los SPs en el esquema dbo
 GRANT EXECUTE ON SCHEMA::spAuroraSA TO Public CASCADE;
 GO

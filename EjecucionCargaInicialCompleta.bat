@@ -2,13 +2,14 @@
 :: Configuración de variables
 set "SQL_SERVER=DESKTOP-RN5237S\SQLEXPRESS"
 set "DATABASE=master"
-set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\01_CreacionBase_Tablas.sql"
-set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\02_CreacionSP_Comunes.sql"
-set "SQL_SCRIPT3=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\03_CreacionSP_ImportacionMasiva.sql"
-set "SQL_SCRIPT4=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\04_InvocarSP_1.sql"
-set "SQL_SCRIPT5=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\06_InvocarSP_2.sql"
+set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\01_CreacionBase_Tablas.sql"
+set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\02_CreacionSP_Comunes.sql"
+set "SQL_SCRIPT22=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\022_CreacionSP_ABM.sql"
+set "SQL_SCRIPT3=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\03_CreacionSP_ImportacionMasiva.sql"
+set "SQL_SCRIPT4=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\04_InvocarSP_1.sql"
+set "SQL_SCRIPT5=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\06_InvocarSP_2.sql"
 
-set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts\05_ActualizarTC.ps1"
+set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\05_ActualizarTC.ps1"
 
 
 echo Iniciando verificacion de archivos...
@@ -24,6 +25,14 @@ if not exist "%SQL_SCRIPT1%" (
 :: Verificar segundo script SQL
 if not exist "%SQL_SCRIPT2%" (
     echo ERROR: No se encuentra el archivo SQL: %SQL_SCRIPT2%
+    echo Presiona cualquier tecla para cerrar...
+    pause >nul
+    exit /b 1
+)
+
+:: Verificar segundo2 script SQL
+if not exist "%SQL_SCRIPT22%" (
+    echo ERROR: No se encuentra el archivo SQL: %SQL_SCRIPT22%
     echo Presiona cualquier tecla para cerrar...
     pause >nul
     exit /b 1
@@ -88,6 +97,16 @@ if errorlevel 1 (
 :: Ejecutar segundo archivo SQL (comentado por ahora)
 echo Ejecutando segundo SQL...
 sqlcmd -S %SQL_SERVER% -d %DATABASE% -i "%SQL_SCRIPT2%"
+if errorlevel 1 (
+    echo ERROR: Fallo la ejecucion del segundo SQL
+    echo Presiona cualquier tecla para cerrar...
+    pause >nul
+    exit /b 1
+)
+
+:: Ejecutar segundo2 archivo SQL (comentado por ahora)
+echo Ejecutando segundo SQL...
+sqlcmd -S %SQL_SERVER% -d %DATABASE% -i "%SQL_SCRIPT22%"
 if errorlevel 1 (
     echo ERROR: Fallo la ejecucion del segundo SQL
     echo Presiona cualquier tecla para cerrar...

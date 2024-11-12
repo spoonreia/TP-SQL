@@ -135,11 +135,8 @@ CREATE TABLE dbAuroraSA.Sucursal(
 
 	CONSTRAINT CK_Telefono_Longitud CHECK (
 		telefono BETWEEN 10000000 AND 99999999 -- Chequea que sean 8 numeros de telefono
-	),
-
-	CONSTRAINT CK_ciudad CHECK(
-		ciudad in ('San Justo', 'Ramos Mejia','Lomas del Mirador')
 	)
+
 )
 GO
 
@@ -148,9 +145,9 @@ CREATE TABLE dbAuroraSA.Empleado(
 	idSucursal	INT NOT NULL,
 	nombre		VARCHAR (50) NOT NULL,
 	apellido	VARCHAR (50) NOT NULL,
-	dni			INT NOT NULL,
-	direccion	VARCHAR (100) NOT NULL,
-	emailEmpre	VARCHAR (100) NOT NULL,
+	dni			INT NOT NULL UNIQUE,
+    direccion    VARBINARY (256) NOT NULL, -- Cambiado a VARBINARY para encriptación
+    emailEmpre   VARBINARY (256) NOT NULL, -- Cambiado a VARBINARY para encriptación
 	cargo		VARCHAR (20) NOT NULL,
 	activo		BIT DEFAULT 1,
 
@@ -180,9 +177,6 @@ CREATE TABLE dbAuroraSA.Cliente(
 
 	CONSTRAINT PK_idCliente PRIMARY KEY (idCliente),
 
-	CONSTRAINT CK_tipoCliente CHECK(
-		tipoCliente in ('Normal','Member')
-	)
 )
 GO
 
@@ -215,10 +209,6 @@ CREATE TABLE dbAuroraSA.Catalogo(
 	tipoArchivo		CHAR(3) NOT NULL,
 
 	CONSTRAINT PK_idCatalogo PRIMARY KEY (idCatalogo),
-
-	CONSTRAINT CK_nombreCatalogo CHECK(
-		nombre in ('De todo','Electronicos','Importados')
-	),
 
 	CONSTRAINT CK_tipoArchivo CHECK(
 		tipoArchivo in ('CSV','XLS')

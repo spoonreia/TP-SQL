@@ -145,8 +145,8 @@ BEGIN
 			TRIM(TE.nombre),
 			TRIM(TE.apellido),
 			TE.dni,
-			TRIM(TE.direccion),
-			REPLACE(REPLACE(TE.emailEmpre, ' ', ''), CHAR(9), ''),
+			EncryptByPassPhrase('FraseSecreta', TRIM(TE.direccion)), -- Encriptar direccion
+            EncryptByPassPhrase('FraseSecreta', REPLACE(REPLACE(TE.emailEmpre, ' ', ''), CHAR(9), '')), -- Encriptar emailEmpre
 			TRIM(TE.cargo),
             1 -- activo por defecto
         FROM #TempEmpleado TE
