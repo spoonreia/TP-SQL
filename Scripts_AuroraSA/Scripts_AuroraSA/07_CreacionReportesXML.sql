@@ -1,16 +1,6 @@
-/*
-	Asignatura: Base de datos aplicada
-	Fecha de entrega: 05-11-2024
-	Comision: 01-2900
-	Grupo 13:
-		Casas, Gonzalo Agustin		DNI:44004892
-*/
-
 USE AuroraSA
 GO
--- Creación de los reportes XML
--- ===========================================
--- 1. Reporte mensual
+-- 1. Reporte Mensual (sin cambios)
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteMensual
     @mes INT,
     @anio INT
@@ -37,8 +27,7 @@ BEGIN
 END
 GO
 
--- 2. Reporte Trimestral (facturación por turnos):
-
+-- 2. Reporte Trimestral (actualizado para incluir Medio de Pago):
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteTrimestral
     @anio INT,
     @trimestre INT
@@ -48,6 +37,7 @@ BEGIN
 
     SELECT 
         MONTH(v.fechaHora) as Mes,
+        mp.nombreES as MedioPago,
         t.nombre as Turno,
         SUM(v.montoTotal) as TotalFacturado
     FROM dbAuroraSA.Venta v
@@ -55,11 +45,13 @@ BEGIN
     INNER JOIN dbAuroraSA.Turno t ON 
         CAST(FORMAT(v.fechaHora, 'HH:mm:ss') AS TIME) >= t.horaIni AND 
         CAST(FORMAT(v.fechaHora, 'HH:mm:ss') AS TIME) <= t.horaFin
+    INNER JOIN dbAuroraSA.MedioPago mp ON v.idMedioPago = mp.idMedioPago
     WHERE YEAR(v.fechaHora) = @anio
         AND DATEPART(QUARTER, v.fechaHora) = @trimestre
         AND t.activo = 1
     GROUP BY 
         MONTH(v.fechaHora), 
+        mp.nombreES,
         t.nombre
     ORDER BY 
         Mes, 
@@ -68,9 +60,7 @@ BEGIN
 END;
 GO
 
-
 -- 3. Reporte por Rango de Fechas (cantidad de productos):
-
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteProductosRango
     @fechaInicio DATE,
     @fechaFin DATE
@@ -78,19 +68,19 @@ AS
 BEGIN
     SELECT 
         p.nombre as Producto,
+        vd.genero as Genero,
         SUM(vd.cantidad) as CantidadVendida
     FROM dbAuroraSA.VentaDetalle vd
     INNER JOIN dbAuroraSA.Producto p ON vd.idProducto = p.idProducto
     INNER JOIN dbAuroraSA.Venta v ON vd.idVenta = v.idVenta
     WHERE v.fechaHora BETWEEN @fechaInicio AND @fechaFin
-    GROUP BY p.nombre
+    GROUP BY p.nombre, vd.genero
     ORDER BY CantidadVendida DESC
     FOR XML PATH('Producto'), ROOT('ReporteVentas')
 END
 GO
 
 -- 4. Reporte por Rango de Fechas por Sucursal:
-
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteSucursalRango
     @fechaInicio DATE,
     @fechaFin DATE
@@ -110,7 +100,6 @@ END
 GO
 
 -- 5. Top 5 Productos más y menos vendidos del mes:
-
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteTopProductosMes
     @mes INT,
     @anio INT
@@ -119,6 +108,7 @@ BEGIN
     -- Top 5 más vendidos por semana
     SELECT TOP 5
         p.nombre as Producto,
+        vd.genero as Genero,
         SUM(vd.cantidad) as CantidadVendida,
         DATEPART(WEEK, v.fechaHora) as NumeroSemana
     FROM dbAuroraSA.VentaDetalle vd
@@ -126,36 +116,37 @@ BEGIN
     INNER JOIN dbAuroraSA.Venta v ON vd.idVenta = v.idVenta
     WHERE MONTH(v.fechaHora) = @mes 
     AND YEAR(v.fechaHora) = @anio
-    GROUP BY p.nombre, DATEPART(WEEK, v.fechaHora)
+    GROUP BY p.nombre, vd.genero, DATEPART(WEEK, v.fechaHora)
     ORDER BY CantidadVendida DESC
     FOR XML PATH('ProductoTop'), ROOT('ProductosMasVendidos');
 
     -- Top 5 menos vendidos
     SELECT TOP 5
         p.nombre as Producto,
+        vd.genero as Genero,
         SUM(vd.cantidad) as CantidadVendida
     FROM dbAuroraSA.VentaDetalle vd
     INNER JOIN dbAuroraSA.Producto p ON vd.idProducto = p.idProducto
     INNER JOIN dbAuroraSA.Venta v ON vd.idVenta = v.idVenta
     WHERE MONTH(v.fechaHora) = @mes 
     AND YEAR(v.fechaHora) = @anio
-    GROUP BY p.nombre
+    GROUP BY p.nombre, vd.genero
     ORDER BY CantidadVendida ASC
     FOR XML PATH('ProductoBottom'), ROOT('ProductosMenosVendidos')
 END
 GO
 
--- 6. Total acumulado por fecha y sucursal:
-
+-- 6. Total acumulado por fecha y sucursal (actualizado para incluir información de Factura):
 CREATE OR ALTER PROCEDURE spAuroraSA.ReporteVentasFechaSucursal
     @fecha DATE,
     @idSucursal INT
 AS
 BEGIN
     SELECT 
-        v.idFactura,
+        f.nroFactura as NumeroFactura,
         v.fechaHora,
         p.nombre as Producto,
+        vd.genero as Genero,
         vd.cantidad,
         vd.precioUnitario,
         (vd.cantidad * vd.precioUnitario) as Subtotal,
@@ -163,6 +154,7 @@ BEGIN
     FROM dbAuroraSA.Venta v
     INNER JOIN dbAuroraSA.VentaDetalle vd ON v.idVenta = vd.idVenta
     INNER JOIN dbAuroraSA.Producto p ON vd.idProducto = p.idProducto
+    INNER JOIN dbAuroraSA.Factura f ON v.idVenta = f.IdVenta
     WHERE CAST(v.fechaHora AS DATE) = @fecha
     AND v.idSucursal = @idSucursal
     ORDER BY v.fechaHora

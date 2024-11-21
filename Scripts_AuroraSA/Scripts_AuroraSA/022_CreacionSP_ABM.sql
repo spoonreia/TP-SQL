@@ -216,7 +216,7 @@ AS
 					PRINT '[ERROR] - NO SE PUDO ELIMINAR EL CLIENTE'
 			END
 			ELSE
-				PRINT '[ERROR] - EL CLIENTE ' + @tipoCliente + ' NO EXISTE';
+				PRINT '[ERROR] - EL CLIENTE ' + @tipoCliente + ' NO EXISTE O ESTA DADO DE BAJA.';
 		COMMIT TRANSACTION
 	END TRY
 	BEGIN CATCH
@@ -400,7 +400,7 @@ BEGIN
             SET @idSucursal = ISNULL(@idSucursal, (SELECT TOP 1 idSucursal FROM dbAuroraSA.Empleado WHERE dni = @dni));
 
             IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Empleado WHERE dni = @dni)
-                THROW 50000, 'El empleado no existe o esta dada de baja.', 1;
+                THROW 50000, 'El empleado no existe.', 1;
 
             IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Sucursal WHERE idSucursal = @idSucursal AND activo = 1)
                 THROW 50001, 'La sucursal especificada no existe o esta dada de baja.', 1;
@@ -1054,10 +1054,7 @@ CREATE OR ALTER PROCEDURE spAuroraSA.VentaInsertar
     @idSucursal int,
     @idMedioPago int,
     @identificaPago varchar(16),
-    @idProducto int,
-    @genero varchar(6),
-    @cantidad int,
-    @precioUnitario decimal(10,2)
+    @productos varchar(MAX) -- Cadena delimitada de productos
 AS
 BEGIN
     BEGIN TRY
@@ -1065,7 +1062,9 @@ BEGIN
             DECLARE @texto VARCHAR(250);
             DECLARE @modulo VARCHAR(10);
             DECLARE @idVenta int;
-			DECLARE @montoTotal decimal(10,2);
+            DECLARE @montoTotal decimal(10,2) = 0;
+            DECLARE @tipoCambio decimal(10,2);
+			DECLARE @dniEmpleado int;
 
             -- Validaciones básicas
             IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Cliente WHERE idCliente = @idCliente)
@@ -1080,50 +1079,109 @@ BEGIN
             IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.MedioPago WHERE idMedioPago = @idMedioPago)
                 THROW 50004, 'El medio de pago especificado no existe.', 1;
 
-			SET @montoTotal = @precioUnitario * @cantidad;
+			IF EXISTS (SELECT 1 FROM dbAuroraSA.Factura WHERE nroFactura = @idFactura)
+                THROW 50005, 'El idFactura ya existe.', 1;
+
+			SET @dniEmpleado = (SELECT dni FROM dbAuroraSA.Empleado where idEmpleado = @idEmpleado);
+
+
             -- Insertar la venta
             INSERT INTO dbAuroraSA.Venta
             (
-                idFactura,
-                tipoFactura,
                 idCliente,
                 idEmpleado,
                 idSucursal,
                 idMedioPago,
-                identificaPago,
                 fechaHora,
                 montoTotal
             )
             VALUES
             (
-                @idFactura,
-                @tipoFactura,
                 @idCliente,
                 @idEmpleado,
                 @idSucursal,
                 @idMedioPago,
-                @identificaPago,
                 GETDATE(),
-                @montoTotal
+                0 -- Se actualizará después de calcular el total
             );
 
             SET @idVenta = SCOPE_IDENTITY();
 
-            -- Insertar los detalles de la venta
-            INSERT INTO dbAuroraSA.VentaDetalle
+            -- Procesar la cadena de productos
+            DECLARE @productoStr NVARCHAR(MAX) = @productos;
+            DECLARE @idProducto INT;
+            DECLARE @genero VARCHAR(6);
+            DECLARE @cantidad INT;
+            DECLARE @precioUnitario DECIMAL(10,2);
+
+            WHILE CHARINDEX(';', @productoStr) > 0
+            BEGIN
+                DECLARE @item NVARCHAR(MAX) = LEFT(@productoStr, CHARINDEX(';', @productoStr) - 1);
+                SET @productoStr = SUBSTRING(@productoStr, CHARINDEX(';', @productoStr) + 1, LEN(@productoStr));
+
+                SET @idProducto = CAST(PARSENAME(REPLACE(@item, '-', '.'), 3) AS INT);
+                SET @genero = PARSENAME(REPLACE(@item, '-', '.'), 2);
+                SET @cantidad = CAST(PARSENAME(REPLACE(@item, '-', '.'), 1) AS INT);
+
+                -- Obtener el precio unitario y convertirlo
+                SET @precioUnitario = (SELECT precioUnitario FROM dbAuroraSA.Producto WHERE idProducto = @idProducto);
+
+                -- Insertar el detalle de venta
+                INSERT INTO dbAuroraSA.VentaDetalle
+                (
+                    idVenta,
+                    idProducto,
+                    genero,
+                    cantidad,
+                    precioUnitario
+                )
+                VALUES
+                (
+                    @idVenta,
+                    @idProducto,
+                    @genero,
+                    @cantidad,
+                    @precioUnitario
+                );
+
+                -- Acumular el monto total
+                SET @montoTotal += @precioUnitario * @cantidad;
+            END
+
+            -- Actualizar el monto total en la tabla Venta
+            UPDATE dbAuroraSA.Venta
+            SET montoTotal = @montoTotal
+            WHERE idVenta = @idVenta;
+
+			INSERT INTO dbAuroraSA.Factura
             (
                 idVenta,
-                idProducto,
-                genero,
-                cantidad,
-                precioUnitario
+                tipoDoc,
+				nroDoc,
+				nroFactura,
+				tipoFactura,
+				total,
+				iva,
+				fechaEmision,
+				identificaPago,
+				estado
             )
-            VALUES( 
+            VALUES
+            (
                 @idVenta,
-                @idProducto,
-                @genero,
-                @cantidad,
-                @precioUnitario);
+                'DNI',
+                @dniEmpleado,
+				@idFactura,
+                @tipoFactura,
+				@montoTotal,
+				@montoTotal * 1.21,
+                GETDATE(),
+				@identificaPago,
+				CASE WHEN 
+					NULLIF(@identificaPago,'') IS NULL THEN 'EMITIDA'
+                ELSE 'PAGADA'
+				END
+            );
 
             -- Registrar en el log
             SET @texto = '[dbAuroraSA.Venta] - Factura: ' + @idFactura + ' - Monto: ' + CAST(@montoTotal AS VARCHAR);
@@ -1138,7 +1196,7 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
             
-        PRINT N'[ERROR] - NO SE HA PODIDO INSERTAR LA VENTA'
+        PRINT N'[ERROR] - NO SE HA PODIDO INSERTAR LA VENTA';
         PRINT N'[ERROR] - ' + '[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
         
         THROW;
@@ -1146,169 +1204,260 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROCEDURE spAuroraSA.VentaEliminar
-    @idVenta int,
-    @motivo varchar(100)  -- Nuevo parámetro para el motivo
+-- CREATE OR ALTER PROCEDURE spAuroraSA.VentaEliminar
+--     @idVenta int,
+--     @motivo varchar(100)  -- Nuevo parámetro para el motivo
+-- AS
+-- BEGIN
+--     BEGIN TRY
+--         BEGIN TRANSACTION
+--             DECLARE @texto VARCHAR(250);
+--             DECLARE @modulo VARCHAR(10);
+--             DECLARE @idFactura char(11);
+--             DECLARE @montoTotal decimal(10,2);
+-- 
+--             -- Verificar que la venta existe
+--             IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Venta WHERE idVenta = @idVenta)
+--                 THROW 50001, 'La venta especificada no existe.', 1;
+-- 
+--             -- Obtener datos para el log antes de eliminar
+--             SELECT 
+--                 @idFactura = idFactura,
+--                 @montoTotal = montoTotal
+--             FROM dbAuroraSA.Venta 
+--             WHERE idVenta = @idVenta;
+-- 
+--             -- Eliminar primero los detalles (por FK)
+--             DELETE FROM dbAuroraSA.VentaDetalle
+--             WHERE idVenta = @idVenta;
+-- 
+--             -- Eliminar la venta
+--             DELETE FROM dbAuroraSA.Venta
+--             WHERE idVenta = @idVenta;
+-- 
+--             -- Registrar en el log (ahora incluye el motivo)
+--             SET @texto = '[dbAuroraSA.Venta] - Factura: ' + @idFactura + ' - Monto: ' + CAST(@montoTotal AS VARCHAR) + ' - Motivo: ' + @motivo;
+--             SET @modulo = 'ELIMINACION';
+--             EXEC spAuroraSA.InsertarLog @texto, @modulo = 'ELIMINACION';
+-- 
+--             PRINT '[AVISO] ELIMINACIÓN DE VENTA ' + @idFactura + ' CORRECTA';
+-- 
+--         COMMIT TRANSACTION
+--     END TRY
+--     BEGIN CATCH
+--         IF @@TRANCOUNT > 0
+--             ROLLBACK TRANSACTION;
+--             
+--         PRINT N'[ERROR] - NO SE HA PODIDO ELIMINAR LA VENTA'
+--         PRINT N'[ERROR] - ' + '[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
+--         
+--         THROW;
+--     END CATCH;
+-- END;
+-- GO
+
+-- CREATE OR ALTER PROCEDURE spAuroraSA.VentaActualizar
+--     @idFactura char(11),
+--     @idMedioPago int = NULL,
+--     @identificaPago varchar(16) = NULL,
+--     @idProducto int = NULL,
+--     @cantidadAjuste int = NULL,
+--     @motivo varchar(100)
+-- AS
+-- BEGIN
+--     BEGIN TRY
+--         BEGIN TRANSACTION
+--             DECLARE @texto VARCHAR(250);
+--             DECLARE @modulo VARCHAR(10);
+--             DECLARE @idVenta int;
+--             DECLARE @cantidadActual int;
+--             DECLARE @cantidadNueva int;
+-- 			DECLARE @precioUnitario decimal(10,2);
+-- 			DECLARE @tipoCambio decimal(10,2);
+-- 
+-- 			SET @tipoCambio = (SELECT TOP 1 precioCompra FROM dbAuroraSA.TipoCambio order by Fecha DESC);
+-- 
+-- 			SET @precioUnitario = (SELECT precioUnitario FROM dbAuroraSA.Producto where idProducto = @idProducto) * @tipoCambio;
+--             
+--             -- Obtener el idVenta a partir de la factura
+--             SELECT @idVenta = idVenta 
+--             FROM dbAuroraSA.Venta 
+--             WHERE idFactura = @idFactura;
+-- 
+--             IF @idVenta IS NULL
+--                 THROW 50001, 'La factura especificada no existe.', 1;
+-- 
+--             -- Si viene información de medio de pago, actualizarla
+--             IF @idMedioPago IS NOT NULL
+--             BEGIN
+--                 -- Verificar que el medio de pago existe
+--                 IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.MedioPago WHERE idMedioPago = @idMedioPago)
+--                     THROW 50002, 'El medio de pago especificado no existe.', 1;
+-- 
+--                 UPDATE dbAuroraSA.Venta
+--                 SET 
+--                     idMedioPago = @idMedioPago,
+--                     identificaPago = @identificaPago
+--                 WHERE idVenta = @idVenta;
+-- 
+--                 SET @texto = '[dbAuroraSA.Venta] - Factura: ' + @idFactura + 
+--                             ' - Nuevo medio pago: ' + CAST(@idMedioPago AS VARCHAR) + 
+--                             ' - Nuevo identif. pago: ' + ISNULL(@identificaPago, 'N/A') +
+--                             ' - Motivo: ' + @motivo;
+--                 
+--                 EXEC spAuroraSA.InsertarLog @texto, 'VENTA';
+--             END
+-- 
+--             -- Si viene información de producto y cantidad, actualizarla
+--             IF @idProducto IS NOT NULL AND @cantidadAjuste IS NOT NULL
+--             BEGIN
+--                 -- Obtener la cantidad actual y precio unitario
+--                 SELECT 
+--                     @cantidadActual = cantidad,
+--                     @precioUnitario = precioUnitario
+--                 FROM dbAuroraSA.VentaDetalle
+--                 WHERE idVenta = @idVenta AND idProducto = @idProducto;
+-- 
+--                 IF @cantidadActual IS NULL
+--                     THROW 50003, 'El producto especificado no existe en esta venta.', 1;
+-- 
+--                 SET @cantidadNueva = @cantidadActual + @cantidadAjuste;
+-- 
+--                 -- Si la cantidad nueva es <= 0, eliminar el detalle y la venta
+--                 IF @cantidadNueva <= 0
+--                 BEGIN
+--                     DELETE FROM dbAuroraSA.VentaDetalle
+--                     WHERE idVenta = @idVenta AND idProducto = @idProducto;
+-- 
+--                     -- Actualizar el montoTotal en Venta
+--                     DELETE FROM dbAuroraSA.Venta
+--                     WHERE idVenta = @idVenta;
+-- 
+--                     SET @texto = '[dbAuroraSA.Venta] - Producto eliminado de venta - Factura: ' + @idFactura + 
+--                                 ' - Producto: ' + CAST(@idProducto AS VARCHAR) +
+--                                 ' - Cantidad eliminada: ' + CAST(@cantidadActual AS VARCHAR) +
+--                                 ' - Motivo: ' + @motivo;
+--                 END
+--                 ELSE
+--                 BEGIN
+--                     -- Actualizar la cantidad
+--                     UPDATE dbAuroraSA.VentaDetalle
+--                     SET cantidad = @cantidadNueva
+--                     WHERE idVenta = @idVenta AND idProducto = @idProducto;
+-- 
+--                     -- Actualizar el montoTotal en Venta
+--                     UPDATE dbAuroraSA.Venta
+--                     SET montoTotal = montoTotal + (@cantidadAjuste * @precioUnitario)
+--                     WHERE idVenta = @idVenta;
+-- 
+--                     SET @texto = '[dbAuroraSA.Venta] - Cantidad actualizada en venta - Factura: ' + @idFactura + 
+--                                 ' - Producto: ' + CAST(@idProducto AS VARCHAR) +
+--                                 ' - Cantidad anterior: ' + CAST(@cantidadActual AS VARCHAR) +
+--                                 ' - Cantidad nueva: ' + CAST(@cantidadNueva AS VARCHAR) +
+--                                 ' - Motivo: ' + @motivo;
+--                 END
+-- 
+--                 EXEC spAuroraSA.InsertarLog @texto, 'ACTUALIZACION';
+--             END
+-- 
+--             PRINT '[AVISO] ACTUALIZACIÓN DE VENTA ' + @idFactura + ' CORRECTA';
+-- 
+--         COMMIT TRANSACTION
+--     END TRY
+--     BEGIN CATCH
+--         IF @@TRANCOUNT > 0
+--             ROLLBACK TRANSACTION;
+--             
+--         PRINT N'[ERROR] - NO SE HA PODIDO ACTUALIZAR LA VENTA'
+--         PRINT N'[ERROR] - ' + '[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
+--         
+--         THROW;
+--     END CATCH;
+-- END;
+-- GO
+
+
+-- NOTACREDITO
+CREATE OR ALTER PROCEDURE spAuroraSA.NotaCreditoInsertar
+    @IdFactura INT,
+    @IdEmpleado INT,
+    @MontoTotal DECIMAL(18,2),
+    @Motivo VARCHAR(500),
+    @TipoDevolucion VARCHAR(10)
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION
             DECLARE @texto VARCHAR(250);
             DECLARE @modulo VARCHAR(10);
-            DECLARE @idFactura char(11);
-            DECLARE @montoTotal decimal(10,2);
+            
+            -- Validación de tipo de devolución
+            IF @TipoDevolucion NOT IN ('EFECTIVO', 'PRODUCTO')
+            BEGIN
+                PRINT '[ERROR] - Tipo de devolución inválido';
+                ROLLBACK TRANSACTION;
+                RETURN;
+            END
 
-            -- Verificar que la venta existe
-            IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Venta WHERE idVenta = @idVenta)
-                THROW 50001, 'La venta especificada no existe.', 1;
+            -- Validar que la factura exista
+            IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Factura WHERE IdFactura = @IdFactura)
+            BEGIN
+                PRINT '[ERROR] - La factura no existe';
+                ROLLBACK TRANSACTION;
+                RETURN;
+            END
 
-            -- Obtener datos para el log antes de eliminar
-            SELECT 
-                @idFactura = idFactura,
-                @montoTotal = montoTotal
-            FROM dbAuroraSA.Venta 
-            WHERE idVenta = @idVenta;
+			-- Verificar si la venta existe y está pagada
+			IF NOT EXISTS (
+				SELECT 1 
+				FROM dbAuroraSA.Factura 
+				WHERE idFactura = @IdFactura 
+				AND identificaPago <> ''
+			)
+			BEGIN
+				PRINT '[ERROR] - La venta debe existir y estar pagada';
+				ROLLBACK TRANSACTION;
+				RETURN;
+			END
 
-            -- Eliminar primero los detalles (por FK)
-            DELETE FROM dbAuroraSA.VentaDetalle
-            WHERE idVenta = @idVenta;
+            -- Validar que el empleado exista
+            IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.Empleado WHERE IdEmpleado = @IdEmpleado)
+            BEGIN
+                PRINT '[ERROR] - El empleado no existe';
+                ROLLBACK TRANSACTION;
+                RETURN;
+            END
 
-            -- Eliminar la venta
-            DELETE FROM dbAuroraSA.Venta
-            WHERE idVenta = @idVenta;
+			-- Validar que la nota de credito para la factura no exista
+            IF EXISTS (SELECT 1 FROM dbAuroraSA.NotaCredito WHERE IdFactura = @IdFactura)
+            BEGIN
+                PRINT '[ERROR] - La factura ya tiene una nota de credito asociada.';
+                ROLLBACK TRANSACTION;
+                RETURN;
+            END
 
-            -- Registrar en el log (ahora incluye el motivo)
-            SET @texto = '[dbAuroraSA.Venta] - Factura: ' + @idFactura + ' - Monto: ' + CAST(@montoTotal AS VARCHAR) + ' - Motivo: ' + @motivo;
-            SET @modulo = 'ELIMINACION';
-            EXEC spAuroraSA.InsertarLog @texto, @modulo = 'ELIMINACION';
-
-            PRINT '[AVISO] ELIMINACIÓN DE VENTA ' + @idFactura + ' CORRECTA';
+            -- Insertar Nota de Crédito
+            INSERT INTO dbAuroraSA.NotaCredito 
+            (IdFactura, IdEmpleado, MontoTotal, Motivo, TipoDevolucion, Estado)
+            VALUES 
+            (@IdFactura, @IdEmpleado, @MontoTotal, @Motivo, @TipoDevolucion, 'P');
+            
+            DECLARE @reg INT = @@ROWCOUNT;
+            IF @reg <> 0
+            BEGIN
+                PRINT '[AVISO] INSERCION DE NOTA DE CREDITO CORRECTA';
+                SET @texto = '[dbAuroraSA.NotaCredito] - Insercion de Nota de Credito para Factura: ' + CAST(@IdFactura AS VARCHAR);
+                SET @modulo = 'INSERCION';
+                EXEC spAuroraSA.InsertarLog @texto, @modulo;
+            END
 
         COMMIT TRANSACTION
     END TRY
     BEGIN CATCH
+        PRINT N'[ERROR] - NO SE HA PODIDO INSERTAR LA NOTA DE CREDITO'
+        PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE()
         IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-            
-        PRINT N'[ERROR] - NO SE HA PODIDO ELIMINAR LA VENTA'
-        PRINT N'[ERROR] - ' + '[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
-        
-        THROW;
-    END CATCH;
-END;
-GO
-
-CREATE OR ALTER PROCEDURE spAuroraSA.VentaActualizar
-    @idFactura char(11),
-    @idMedioPago int = NULL,
-    @identificaPago varchar(16) = NULL,
-    @idProducto int = NULL,
-    @cantidadAjuste int = NULL,
-    @motivo varchar(100)
-AS
-BEGIN
-    BEGIN TRY
-        BEGIN TRANSACTION
-            DECLARE @texto VARCHAR(250);
-            DECLARE @modulo VARCHAR(10);
-            DECLARE @idVenta int;
-            DECLARE @cantidadActual int;
-            DECLARE @cantidadNueva int;
-            DECLARE @precioUnitario decimal(10,2);
-            
-            -- Obtener el idVenta a partir de la factura
-            SELECT @idVenta = idVenta 
-            FROM dbAuroraSA.Venta 
-            WHERE idFactura = @idFactura;
-
-            IF @idVenta IS NULL
-                THROW 50001, 'La factura especificada no existe.', 1;
-
-            -- Si viene información de medio de pago, actualizarla
-            IF @idMedioPago IS NOT NULL
-            BEGIN
-                -- Verificar que el medio de pago existe
-                IF NOT EXISTS (SELECT 1 FROM dbAuroraSA.MedioPago WHERE idMedioPago = @idMedioPago)
-                    THROW 50002, 'El medio de pago especificado no existe.', 1;
-
-                UPDATE dbAuroraSA.Venta
-                SET 
-                    idMedioPago = @idMedioPago,
-                    identificaPago = @identificaPago
-                WHERE idVenta = @idVenta;
-
-                SET @texto = '[dbAuroraSA.Venta] - Factura: ' + @idFactura + 
-                            ' - Nuevo medio pago: ' + CAST(@idMedioPago AS VARCHAR) + 
-                            ' - Nuevo identif. pago: ' + ISNULL(@identificaPago, 'N/A') +
-                            ' - Motivo: ' + @motivo;
-                
-                EXEC spAuroraSA.InsertarLog @texto, 'VENTA';
-            END
-
-            -- Si viene información de producto y cantidad, actualizarla
-            IF @idProducto IS NOT NULL AND @cantidadAjuste IS NOT NULL
-            BEGIN
-                -- Obtener la cantidad actual y precio unitario
-                SELECT 
-                    @cantidadActual = cantidad,
-                    @precioUnitario = precioUnitario
-                FROM dbAuroraSA.VentaDetalle
-                WHERE idVenta = @idVenta AND idProducto = @idProducto;
-
-                IF @cantidadActual IS NULL
-                    THROW 50003, 'El producto especificado no existe en esta venta.', 1;
-
-                SET @cantidadNueva = @cantidadActual + @cantidadAjuste;
-
-                -- Si la cantidad nueva es <= 0, eliminar el detalle y la venta
-                IF @cantidadNueva <= 0
-                BEGIN
-                    DELETE FROM dbAuroraSA.VentaDetalle
-                    WHERE idVenta = @idVenta AND idProducto = @idProducto;
-
-                    -- Actualizar el montoTotal en Venta
-                    DELETE FROM dbAuroraSA.Venta
-                    WHERE idVenta = @idVenta;
-
-                    SET @texto = '[dbAuroraSA.Venta] - Producto eliminado de venta - Factura: ' + @idFactura + 
-                                ' - Producto: ' + CAST(@idProducto AS VARCHAR) +
-                                ' - Cantidad eliminada: ' + CAST(@cantidadActual AS VARCHAR) +
-                                ' - Motivo: ' + @motivo;
-                END
-                ELSE
-                BEGIN
-                    -- Actualizar la cantidad
-                    UPDATE dbAuroraSA.VentaDetalle
-                    SET cantidad = @cantidadNueva
-                    WHERE idVenta = @idVenta AND idProducto = @idProducto;
-
-                    -- Actualizar el montoTotal en Venta
-                    UPDATE dbAuroraSA.Venta
-                    SET montoTotal = montoTotal + (@cantidadAjuste * @precioUnitario)
-                    WHERE idVenta = @idVenta;
-
-                    SET @texto = '[dbAuroraSA.Venta] - Cantidad actualizada en venta - Factura: ' + @idFactura + 
-                                ' - Producto: ' + CAST(@idProducto AS VARCHAR) +
-                                ' - Cantidad anterior: ' + CAST(@cantidadActual AS VARCHAR) +
-                                ' - Cantidad nueva: ' + CAST(@cantidadNueva AS VARCHAR) +
-                                ' - Motivo: ' + @motivo;
-                END
-
-                EXEC spAuroraSA.InsertarLog @texto, 'ACTUALIZACION';
-            END
-
-            PRINT '[AVISO] ACTUALIZACIÓN DE VENTA ' + @idFactura + ' CORRECTA';
-
-        COMMIT TRANSACTION
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-            
-        PRINT N'[ERROR] - NO SE HA PODIDO ACTUALIZAR LA VENTA'
-        PRINT N'[ERROR] - ' + '[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR) + ' - [MSG]: ' + ERROR_MESSAGE();
-        
-        THROW;
+            ROLLBACK TRANSACTION
     END CATCH;
 END;
 GO

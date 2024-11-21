@@ -599,17 +599,17 @@ GO
 -- Insertar masivamente las ventas
 -- Se espera la ruta del archivo "Ventas_registradas.csv" para ejecutar el SP en @RUTA
 CREATE OR ALTER PROCEDURE spAuroraSA.VentasInsertarMasivo
-	@rutaxls NVARCHAR(300)
+    @rutaxls NVARCHAR(300)
 AS
 BEGIN
-	SET NOCOUNT ON;
+    SET NOCOUNT ON;
     
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @mensaje VARCHAR(100),
-			@reg AS INT
-	DECLARE @tcCompra as DECIMAL;
+            @reg AS INT;
+    DECLARE @tcCompra as DECIMAL;
 
-	-- Verificar el tipo de cambio
+    -- Verificar el tipo de cambio
     SELECT TOP 1 @tcCompra = precioCompra
     FROM dbAuroraSA.TipoCambio
     ORDER BY Fecha DESC;
@@ -620,84 +620,152 @@ BEGIN
         RETURN;
     END
 
-	CREATE TABLE #TempVentas (
-            idFactura	VARCHAR(20),
-			tipoFactura	VARCHAR(20),
-			ciudad		VARCHAR(20),
-			tipoCliente	VARCHAR(20),
-			genero		VARCHAR(20),
-			producto	VARCHAR(150),
-			precioUnit	VARCHAR(10),
-			cant		VARCHAR(5),
-			fecha		VARCHAR(10),
-			hora		VARCHAR(5),
-			medioPago	VARCHAR(20),
-			empleado	VARCHAR(6),
-			identifPago	VARCHAR(50)
-        );
+    CREATE TABLE #TempVentas (
+        idFactura    VARCHAR(20),
+        tipoFactura  VARCHAR(20),
+        ciudad       VARCHAR(20),
+        tipoCliente  VARCHAR(20),
+        genero       VARCHAR(20),
+        producto     VARCHAR(150),
+        precioUnit   VARCHAR(10),
+        cant        VARCHAR(5),
+        fecha       VARCHAR(10),
+        hora        VARCHAR(5),
+        medioPago   VARCHAR(20),
+        empleado    VARCHAR(6),
+        identifPago VARCHAR(50)
+    );
 
-	SET @sql = N'BULK INSERT #TempVentas FROM ''' + @rutaxls + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '';'', ROWTERMINATOR = ''\n'')';
+    -- Tabla temporal para almacenar los datos de venta procesados
+    CREATE TABLE #VentasAProcesar (
+        idFactura VARCHAR(20),
+        idCliente INT,
+        idEmpleado INT,
+        idSucursal INT,
+        idMedioPago INT,
+        fechaHora DATETIME,
+        montoTotal DECIMAL(10,2)
+    );
+
+    -- Tabla temporal para almacenar la relación entre factura y venta
+    CREATE TABLE #VentasGeneradas (
+        idVenta INT,
+        idFactura VARCHAR(20)
+    );
+
+    SET @sql = N'BULK INSERT #TempVentas FROM ''' + @rutaxls + ''' WITH(CHECK_CONSTRAINTS,FORMAT = ''CSV'', CODEPAGE = ''65001'', FIRSTROW = 2, FIELDTERMINATOR = '';'', ROWTERMINATOR = ''\n'')';
 
     BEGIN TRY
-		BEGIN TRANSACTION
+        BEGIN TRANSACTION
 
         EXEC sp_executesql @sql;
 
-        -- Insertar datos en la tabla final, limpiando el formato del teléfono
-        INSERT INTO dbAuroraSA.Venta(idFactura,tipoFactura,idCliente,idEmpleado,idSucursal,idMedioPago,identificaPago,fechaHora,montoTotal)
+        -- Primero procesamos los datos y los guardamos en la tabla temporal
+        INSERT INTO #VentasAProcesar (idFactura, idCliente, idEmpleado, idSucursal, idMedioPago, fechaHora, montoTotal)
         SELECT 
-            TRIM(tv.idFactura) as idFactura,
-			TRIM(tv.tipoFactura) as tipoFactura,
-			c.idCliente as idCliente,
-			CAST(tv.empleado as INT) as idEmpleado,
-			s.idSucursal as idSucursal,
-			mp.idMedioPago as idMedioPago,
-			SUBSTRING(
-				REPLACE(REPLACE(tv.identifPago, '''', ''), '-', ''),  -- Quita comillas y guiones
-				PATINDEX('%[^0]%', REPLACE(REPLACE(tv.identifPago, '''', ''), '-', '')),  -- Encuentra la primera posición de un dígito distinto de 0
-				LEN(tv.identifPago)  -- Extrae el resto de la cadena desde la primera posición no-cero
-			) AS identificaPago,
-			CONVERT(DATETIME, TRIM(tv.fecha)+ ' ' + TRIM(tv.hora), 120) AS fechaHora,
-			CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra * CAST(tv.cant as INT) as montoTotal
+            tv.idFactura,
+            c.idCliente,
+            CAST(tv.empleado as INT),
+            s.idSucursal,
+            mp.idMedioPago,
+            CONVERT(DATETIME, TRIM(tv.fecha)+ ' ' + TRIM(tv.hora), 120),
+            CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra * CAST(tv.cant as INT)
         FROM #TempVentas tv
-		LEFT JOIN dbAuroraSA.Cliente c on c.tipoCliente = tv.tipoCliente COLLATE Modern_Spanish_CI_AI
-		LEFT JOIN dbAuroraSA.Sucursal AS s 
-								ON 
-									CASE 
-										WHEN tv.ciudad = 'Yangon' THEN 'San Justo'
-										WHEN tv.ciudad = 'Naypyitaw' THEN 'Ramos Mejia'
-										WHEN tv.ciudad = 'Mandalay' THEN 'Lomas del Mirador'
-										ELSE tv.ciudad  -- Para otras ciudades, mantiene el valor original
-									END = s.ciudad COLLATE Modern_Spanish_CI_AI
-		LEFT JOIN dbAuroraSA.MedioPago as mp on mp.nombreEN = tv.medioPago COLLATE Modern_Spanish_CI_AI
-		WHERE NOT EXISTS (
-				SELECT 1 
-				FROM dbAuroraSA.Venta AS v
-				WHERE v.idFactura = tv.idFactura COLLATE Modern_Spanish_CI_AI
-			)
-		
-		
-		;
+        LEFT JOIN dbAuroraSA.Cliente c on c.tipoCliente = tv.tipoCliente COLLATE Modern_Spanish_CI_AI
+        LEFT JOIN dbAuroraSA.Sucursal AS s 
+            ON CASE 
+                WHEN tv.ciudad = 'Yangon' THEN 'San Justo'
+                WHEN tv.ciudad = 'Naypyitaw' THEN 'Ramos Mejia'
+                WHEN tv.ciudad = 'Mandalay' THEN 'Lomas del Mirador'
+                ELSE tv.ciudad
+            END = s.ciudad COLLATE Modern_Spanish_CI_AI
+        LEFT JOIN dbAuroraSA.MedioPago as mp on mp.nombreEN = tv.medioPago COLLATE Modern_Spanish_CI_AI
+        WHERE tv.idFactura IS NOT NULL;
 
-		SET @reg = @@ROWCOUNT;
+        -- Ahora insertamos en la tabla de Ventas y capturamos los IDs
+        INSERT INTO dbAuroraSA.Venta(idCliente, idEmpleado, idSucursal, idMedioPago, fechaHora, montoTotal)
+        OUTPUT 
+            INSERTED.idVenta,
+            INSERTED.fechaHora
+        INTO #VentasGeneradas(idVenta, idFactura)
+        SELECT 
+            idCliente,
+            idEmpleado,
+            idSucursal,
+            idMedioPago,
+            fechaHora,
+            montoTotal
+        FROM #VentasAProcesar;
 
+        -- Actualizamos los idFactura en #VentasGeneradas usando la fechaHora como referencia
+        UPDATE vg
+        SET vg.idFactura = vap.idFactura
+        FROM #VentasGeneradas vg
+        INNER JOIN #VentasAProcesar vap ON vg.idFactura = vap.fechaHora;
+
+        SET @reg = @@ROWCOUNT;
         SET @mensaje = N'[dbAuroraSA.Venta] - ' + CAST(@reg AS VARCHAR) + N' ventas nuevas.';
         PRINT @mensaje;
+        
+        EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
+        
+        -- Insertar las facturas usando la relación correcta
+        INSERT INTO dbAuroraSA.Factura(IdVenta, tipoDoc, nroDoc, nroFactura, tipoFactura, total, iva, fechaEmision, identificaPago, estado)
+        SELECT 
+            vg.idVenta,
+            'DNI',
+            e.dni,
+            TRIM(tv.idFactura),
+            TRIM(tv.tipoFactura),
+            CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra * CAST(tv.cant as INT),
+            CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra * CAST(tv.cant as INT) * 1.21,
+            CONVERT(DATETIME, TRIM(tv.fecha)+ ' ' + TRIM(tv.hora), 120),
+            SUBSTRING(
+                REPLACE(REPLACE(tv.identifPago, '''', ''), '-', ''),
+                PATINDEX('%[^0]%', REPLACE(REPLACE(tv.identifPago, '''', ''), '-', '')),
+                LEN(tv.identifPago)
+            ),
+            CASE WHEN 
+                NULLIF(SUBSTRING(
+                    REPLACE(REPLACE(tv.identifPago, '''', ''), '-', ''),
+                    PATINDEX('%[^0]%', REPLACE(REPLACE(tv.identifPago, '''', ''), '-', '')),
+                    LEN(tv.identifPago)
+                ), '') IS NULL THEN 'EMITIDA'
+                ELSE 'PAGADA'
+            END
+        FROM #TempVentas tv
+        INNER JOIN #VentasGeneradas vg ON vg.idFactura = tv.idFactura
+        LEFT JOIN dbAuroraSA.Empleado as e on e.idEmpleado = cast(tv.empleado as INT)
+        WHERE NOT EXISTS (
+            SELECT 1 
+            FROM dbAuroraSA.Factura AS v
+            WHERE v.nroFactura = tv.idFactura COLLATE Modern_Spanish_CI_AI
+        );
+        
+        SET @reg = @@ROWCOUNT;
+        SET @mensaje = N'[dbAuroraSA.Factura] - ' + CAST(@reg AS VARCHAR) + N' facturas nuevas.';
+        PRINT @mensaje;
+        
+        EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
 
-		EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
-
-		COMMIT TRANSACTION
+        COMMIT TRANSACTION
     END TRY
     BEGIN CATCH
         PRINT N'[ERROR] - NO SE HA PODIDO IMPORTAR NUEVAS VENTAS'
-		PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
+        PRINT N'[ERROR] - ' +'[LINE]: ' + CAST(ERROR_LINE() AS VARCHAR)+ ' - [MSG]: ' + CAST(ERROR_MESSAGE() AS VARCHAR)
 
-		IF @@TRANCOUNT > 0
-			ROLLBACK TRANSACTION
-
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION
     END CATCH
+
     IF OBJECT_ID('tempdb..#TempVentas') IS NOT NULL
         DROP TABLE #TempVentas;
+    
+    IF OBJECT_ID('tempdb..#VentasAProcesar') IS NOT NULL
+        DROP TABLE #VentasAProcesar;
+        
+    IF OBJECT_ID('tempdb..#VentasGeneradas') IS NOT NULL
+        DROP TABLE #VentasGeneradas;
 
     SET NOCOUNT OFF;
 END
@@ -753,19 +821,19 @@ BEGIN
         -- Insertar datos en la tabla final, limpiando el formato del teléfono
         INSERT INTO dbAuroraSA.VentaDetalle(idVenta,idProducto,genero,cantidad,precioUnitario)
         SELECT 
-            v.idVenta as idVenta,
+            f.idVenta as idVenta,
 			p.idProducto as idProducto,
 			TRIM(tv.genero) as genero,
 			CAST(tv.cant as INT) as cantidad,
 			CAST(tv.precioUnit as DECIMAL(10,2)) * @tcCompra as precioUnitario
         FROM #TempVentas tv
-		INNER JOIN dbAuroraSA.Venta v on TRIM(tv.idFactura) = v.idFactura COLLATE Modern_Spanish_CI_AI
+		INNER JOIN dbAuroraSA.Factura f on f.nroFactura = TRIM(tv.idFactura) COLLATE Modern_Spanish_CI_AI
 		INNER JOIN dbAuroraSA.Producto p ON REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(TRIM(tv.producto), 'Ã©', 'é'),
                'Ã¡', 'á'),'Ã±','ñ'),'Ã³','ó'),'Ã­','í'),'Ãº','ú') LIKE '%' + p.nombre + '%' COLLATE Modern_Spanish_CI_AI
 		WHERE NOT EXISTS (
 			SELECT 1 
 			FROM dbAuroraSA.VentaDetalle AS dv
-			WHERE dv.idVenta = v.idVenta
+			WHERE dv.idVenta = f.idVenta
 			and dv.idProducto = p.idProducto
 		);
 
@@ -791,6 +859,7 @@ BEGIN
 
     SET NOCOUNT OFF;
 END
+
 GO
 
 -- Insertar turnos masivos
@@ -848,63 +917,3 @@ BEGIN
     END CATCH;
 END;
 GO
-
--- Stored Procedure para insertar nota de crédito (solo supervisores)
-CREATE OR ALTER PROCEDURE spAuroraSA.NotaCreditoInsertar
-    @IdVenta INT,
-    @IdEmpleado INT,
-    @MontoTotal DECIMAL(18,2),
-    @Motivo VARCHAR(500),
-    @TipoDevolucion VARCHAR(10),
-    @IdProductoNuevo INT = NULL
-AS
-BEGIN
-	DECLARE @mensaje VARCHAR(100)
-    SET NOCOUNT ON;
-    
-    -- Verificar si el empleado es supervisor
-    IF NOT EXISTS (
-        SELECT 1 
-        FROM dbAuroraSA.Empleado 
-        WHERE IdEmpleado = @IdEmpleado 
-        AND cargo = 'Supervisor'
-    )
-    BEGIN
-        PRINT ('Solo supervisores pueden generar notas de crédito');
-        RETURN;
-    END
-
-    -- Verificar si la venta existe y está pagada
-    IF NOT EXISTS (
-        SELECT 1 
-        FROM dbAuroraSA.Venta 
-        WHERE IdVenta = @IdVenta 
-        AND IdentificaPago IS NOT NULL
-    )
-    BEGIN
-        PRINT ('La venta debe existir y estar pagada');
-        RETURN;
-    END
-
-    INSERT INTO dbAuroraSA.NotaCredito (
-        IdVenta,
-        IdEmpleado,
-        MontoTotal,
-        Motivo,
-        TipoDevolucion,
-        IdProductoNuevo
-    )
-    VALUES (
-        @IdVenta,
-        @IdEmpleado,
-        @MontoTotal,
-        @Motivo,
-        @TipoDevolucion,
-        @IdProductoNuevo
-    );
-
-	SET @mensaje = N'[dbAuroraSA.NotaCredito] - 1 nota de credito nueva.';
-	PRINT @mensaje;
-
-	EXEC spAuroraSA.InsertarLog @texto = @mensaje, @modulo = 'INSERCION'
-END;

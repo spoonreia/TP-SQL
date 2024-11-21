@@ -70,6 +70,10 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 	DROP TABLE dbAuroraSA.Venta;
 GO
 
+IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbAuroraSA].[Factura]'))
+	DROP TABLE dbAuroraSA.Factura;
+GO
+
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[logAuroraSA].[Registro]'))
 	DROP TABLE logAuroraSA.Registro;
 GO
@@ -108,11 +112,8 @@ CREATE TABLE dbAuroraSA.Turno(
 	horaFin		TIME NOT NULL,
 	activo		BIT DEFAULT 1,
 
-	CONSTRAINT PK_idTurno PRIMARY KEY (idTurno),
+	CONSTRAINT PK_idTurno PRIMARY KEY (idTurno)
 
-	CONSTRAINT CK_nombreTurno CHECK (
-		nombre in ('Maniana','Tarde','Jornada completa')
-	)
 )
 GO
 
@@ -190,11 +191,7 @@ CREATE TABLE dbAuroraSA.MedioPago(
 	nombreES	VARCHAR (50) NOT NULL,
 	activo		BIT DEFAULT 1,
 
-	CONSTRAINT PK_idMedioPago PRIMARY KEY (idMedioPago),
-
-	CONSTRAINT CK_nombreMedioPago CHECK(
-		nombreEN in ('Credit card','Cash','Ewallet')
-	)
+	CONSTRAINT PK_idMedioPago PRIMARY KEY (idMedioPago)
 )
 GO
 
@@ -237,13 +234,10 @@ GO
 
 CREATE TABLE dbAuroraSA.Venta(
 	idVenta				INT IDENTITY(1,1),
-	idFactura			CHAR(11) UNIQUE NOT NULL,
-	tipoFactura			CHAR(1) NOT NULL,
 	idCliente			INT NOT NULL,
 	idEmpleado			INT NOT NULL,
 	idSucursal			INT NOT NULL,
 	idMedioPago			INT NOT NULL,
-	identificaPago		VARCHAR(16),
 	fechaHora			DATETIME NOT NULL,
 	montoTotal			DECIMAL(10,2) NOT NULL,
 
@@ -260,13 +254,33 @@ CREATE TABLE dbAuroraSA.Venta(
 
 	CONSTRAINT FK_idMedioPago FOREIGN KEY (idMedioPago)
 	REFERENCES dbAuroraSA.MedioPago(idMedioPago),
+)
+GO
+
+CREATE TABLE dbAuroraSA.Factura(
+	idFactura			INT IDENTITY(1,1),
+	IdVenta				INT NOT NULL,
+	tipoDoc				VARCHAR(10) NOT NULL,
+	nroDoc				INT NOT NULL,
+	nroFactura			CHAR(11) NOT NULL,
+	tipoFactura			CHAR(1) NOT NULL,
+	total				DECIMAL(10,2) NOT NULL,
+	iva					DECIMAL(10,2) NOT NULL,
+	fechaEmision		DATETIME NOT NULL,
+	identificaPago		CHAR(16) NOT NULL,
+	estado				VARCHAR(10) NOT NULL,
+
+	CONSTRAINT PK_idFactura PRIMARY KEY (idFactura),
+
+	CONSTRAINT FK_idVentaFactura FOREIGN KEY (idVenta)
+	REFERENCES dbAuroraSA.Venta(idVenta),
 
 	CONSTRAINT CK_tipoFactura CHECK(
 		tipoFactura in ('A','B','C')
 	)
 )
 GO
-
+	
 CREATE TABLE dbAuroraSA.VentaDetalle(
 	idVentaDetalle	INT IDENTITY(1,1),
 	idVenta			INT NOT NULL,
@@ -296,18 +310,26 @@ GO
 -- Crear tabla NotaCredito
 CREATE TABLE dbAuroraSA.NotaCredito (
     IdNotaCredito INT PRIMARY KEY IDENTITY(1,1),
-    IdVenta INT NOT NULL,
+    IdFactura INT NOT NULL,
     IdEmpleado INT NOT NULL,
     FechaEmision DATETIME DEFAULT GETDATE(),
     MontoTotal DECIMAL(18,2) NOT NULL,
     Estado CHAR(1) DEFAULT 'P', -- P: Pendiente, A: Aprobado, R: Rechazado
     Motivo VARCHAR(500) NOT NULL,
-    TipoDevolucion VARCHAR(10) NOT NULL CHECK (TipoDevolucion IN ('EFECTIVO', 'PRODUCTO')),
-    IdProductoNuevo INT NULL,
-    CONSTRAINT FK_NotaCredito_Venta FOREIGN KEY (IdVenta) 
-        REFERENCES dbAuroraSA.Venta(IdVenta) ON DELETE NO ACTION,
+    TipoDevolucion VARCHAR(10) NOT NULL,
+
+	CONSTRAINT FK_Estado_NC CHECK(
+		Estado in ('P','A','R')
+	),
+
+	CONSTRAINT FK_TipoDev_NC CHECK (
+		TipoDevolucion IN ('EFECTIVO', 'PRODUCTO')
+	),
+
+    CONSTRAINT FK_NotaCredito_Factura FOREIGN KEY (IdFactura) 
+        REFERENCES dbAuroraSA.Factura(IdFactura) ON DELETE NO ACTION,
+
     CONSTRAINT FK_NotaCredito_Empleado FOREIGN KEY (IdEmpleado) 
-        REFERENCES dbAuroraSA.Empleado(IdEmpleado),
-    CONSTRAINT FK_NotaCredito_ProductoNuevo FOREIGN KEY (IdProductoNuevo) 
-        REFERENCES dbAuroraSA.Producto(IdProducto)
+        REFERENCES dbAuroraSA.Empleado(IdEmpleado)
+
 );

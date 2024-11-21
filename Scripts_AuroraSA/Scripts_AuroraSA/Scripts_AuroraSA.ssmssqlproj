@@ -3,15 +3,15 @@
   <Items>
     <LogicalFolder Name="Connections" Type="2" Sorted="true">
       <Items>
-        <ConnectionNode Name="DESKTOP-RN5237S\SQLEXPRESS:DESKTOP-RN5237S\Gosa">
-          <Created>2024-11-10T22:07:47.0752826-03:00</Created>
+        <ConnectionNode Name="DESKTOP-RN5237S:DESKTOP-RN5237S\Gosa">
+          <Created>2024-11-20T20:02:07.3091241-03:00</Created>
           <Type>SQL</Type>
-          <Server>DESKTOP-RN5237S\SQLEXPRESS</Server>
+          <Server>DESKTOP-RN5237S</Server>
           <UserName />
           <Authentication>Windows Authentication</Authentication>
           <InitialDB />
           <LoginTimeout>30</LoginTimeout>
-          <TrustServerCertificate>True</TrustServerCertificate>
+          <TrustServerCertificate>False</TrustServerCertificate>
           <HostNameInServerCertificate />
           <EncryptionOption>False</EncryptionOption>
           <ExecutionTimeout>0</ExecutionTimeout>
@@ -23,62 +23,62 @@
     <LogicalFolder Name="Queries" Type="0" Sorted="true">
       <Items>
         <FileNode Name="01_CreacionBase_Tablas.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01_CreacionBase_Tablas.sql</FullPath>
         </FileNode>
         <FileNode Name="02_CreacionSP_Comunes.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>02_CreacionSP_Comunes.sql</FullPath>
         </FileNode>
         <FileNode Name="022_CreacionSP_ABM.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>022_CreacionSP_ABM.sql</FullPath>
         </FileNode>
         <FileNode Name="03_CreacionSP_ImportacionMasiva.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>03_CreacionSP_ImportacionMasiva.sql</FullPath>
         </FileNode>
         <FileNode Name="04_InvocarSP_1.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>04_InvocarSP_1.sql</FullPath>
         </FileNode>
         <FileNode Name="06_InvocarSP_2.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>06_InvocarSP_2.sql</FullPath>
         </FileNode>
         <FileNode Name="07_CreacionReportesXML.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>07_CreacionReportesXML.sql</FullPath>
         </FileNode>
         <FileNode Name="08_InvocarSP_ReportesXML.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>08_InvocarSP_ReportesXML.sql</FullPath>
         </FileNode>
         <FileNode Name="09_Seguridad_Backups.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>09_Seguridad_Backups.sql</FullPath>
         </FileNode>
         <FileNode Name="Testeo_SPs.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-RN5237S\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-RN5237S:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-RN5237S</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>Testeo_SPs.sql</FullPath>
         </FileNode>

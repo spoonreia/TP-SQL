@@ -74,23 +74,17 @@ Items pendientes:
 	- [X] VentaInsertar (Debe insertar en tabla Venta y VentaDetalle)
 	- [X] modificarDetalleVenta y CrearDetalleVenta -> Si viene id_producto junto a id_factura que ya existe, tengo q actualizar segun cantidad. Si llegase a venir -5 cuando en cantidad tenia 5, podria hasta hacer un delete.
 
-	
-	
-	
-	
-	
-	
-
-	
 
 - [ ] Entrega 5: 
 	- [ ] Agregar punto de venta en tabla NotaCredito max 4/5
 	- [ ] Agregar numero de comprobante en tabla NotaCredito max 8 digitos
-	- [ ] Agregar a venta un campo que sea IVA = Monto * 1.21. Asumiendo que siempre las ventas son para un consumidor final.
-	- [ ] Seguridad:
+	- [X] Agregar a venta un campo que sea IVA = Monto * 1.21. Asumiendo que siempre las ventas son para un consumidor final.
+	- [X] Seguridad:
 		- [X] Encriptar algunos datos de empleados. -> Debo cambiar el tipo de datos de 2 o 3 campos para que cuando se inserten sea encriptados (No usar nombre y apellido)
 				Que en el test aparezca la insercion de datos, atras un select y atras un reporte con los campos desencriptados.
 		- [X] Agregar permisos de vendedor y supervisor.
 		- [X] Hacer tabla nota de credito (junto a que solo pueda ejecutarlo un supervisor).
 		- [X] Agregar SP de BKP y crear un job para realizar bkps diarios.
-		- [ ] Crear usuario y probar los distintos roles.
+		- [X] Crear usuario y probar los distintos roles.
+		
+		

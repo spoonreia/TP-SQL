@@ -1,15 +1,15 @@
 @echo off
 :: Configuración de variables
-set "SQL_SERVER=DESKTOP-RN5237S\SQLEXPRESS"
+set "SQL_SERVER=DESKTOP-RN5237S"
 set "DATABASE=master"
-set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\01_CreacionBase_Tablas.sql"
-set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\02_CreacionSP_Comunes.sql"
-set "SQL_SCRIPT22=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\022_CreacionSP_ABM.sql"
-set "SQL_SCRIPT3=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\03_CreacionSP_ImportacionMasiva.sql"
-set "SQL_SCRIPT4=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\04_InvocarSP_1.sql"
-set "SQL_SCRIPT5=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\06_InvocarSP_2.sql"
+set "SQL_SCRIPT1=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\01_CreacionBase_Tablas.sql"
+set "SQL_SCRIPT2=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\02_CreacionSP_Comunes.sql"
+set "SQL_SCRIPT22=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\022_CreacionSP_ABM.sql"
+set "SQL_SCRIPT3=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\03_CreacionSP_ImportacionMasiva.sql"
+set "SQL_SCRIPT4=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\04_InvocarSP_1.sql"
+set "SQL_SCRIPT5=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\06_InvocarSP_2.sql"
 
-set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\Base de datos aplicada\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\05_ActualizarTC.ps1"
+set "PS_SCRIPT=C:\Users\Gosa\Documents\Facultad\BDDA\TP-SQL\Scripts_AuroraSA\Scripts_AuroraSA\05_ActualizarTC.ps1"
 
 
 echo Iniciando verificacion de archivos...
